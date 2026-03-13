@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  ArrowLeft, Edit2, Archive, Plus, Trash2, CheckCircle2,
+  ArrowLeft, Edit2, Archive, Plus, CheckCircle2,
   Clock, Flag, Users, DollarSign, BarChart2, X, Search,
 } from 'lucide-react'
 
 import { projectService } from '@/services/project.service'
 import { userService } from '@/services/user.service'
+import KanbanBoard from '@/pages/tasks/KanbanBoard'
 import type { Task, ProjectMember, TaskStatus, TaskPriority } from '@/types/project.types'
 import { ROUTES } from '@/constants/routes'
 import { useAuth } from '@/hooks/useAuth'
@@ -893,7 +894,7 @@ const ProjectDetailPage = () => {
 
       {/* ── Tab content ─────────────────────────────────────── */}
       {activeTab === 'overview' && <OverviewTab projectId={id!} />}
-      {activeTab === 'tasks'    && <TasksTab    projectId={id!} canManage={canManage} />}
+      {activeTab === 'tasks'    && <KanbanBoard projectId={id!} />}
       {activeTab === 'team'     && <TeamTab     projectId={id!} canManage={canManage} />}
       {activeTab === 'budget'   && <BudgetTab   projectId={id!} />}
     </div>

@@ -1,5 +1,5 @@
 export type ProjectStatus   = 'planning' | 'active' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled' | 'archived'
-export type TaskStatus      = 'todo' | 'in_progress' | 'in_review' | 'done'
+export type TaskStatus      = 'todo' | 'in_progress' | 'in_review' | 'done' | 'blocked'
 export type TaskPriority    = 'low' | 'medium' | 'high' | 'critical'
 export type ProjectPriority = 'low' | 'medium' | 'high' | 'critical'
 
@@ -67,6 +67,38 @@ export interface Task {
   assignee_avatar?: string
   due_date?: string
   estimated_hours?: number
+  logged_hours?: number
+  labels?: string[]
+  subtask_count?: number
+  completed_subtasks?: number
+  created_at: string
+}
+
+export interface SubTask {
+  id: string
+  task_id: string
+  title: string
+  completed: boolean
+}
+
+export interface TaskComment {
+  id: string
+  task_id: string
+  user_id: string
+  user_name: string
+  user_avatar?: string
+  content: string
+  created_at: string
+}
+
+export interface TimeLog {
+  id: string
+  task_id: string
+  user_id: string
+  user_name: string
+  hours: number
+  description?: string
+  date: string
   created_at: string
 }
 
