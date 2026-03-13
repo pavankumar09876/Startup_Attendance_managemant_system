@@ -1,5 +1,68 @@
-// ReportsPage — will be fully built in next prompt
-const ReportsPage = () => (
-  <div className="text-gray-500 text-sm">ReportsPage coming soon…</div>
-)
+import { useState } from 'react'
+import { BarChart2, Calendar, Users, DollarSign } from 'lucide-react'
+
+import AttendanceReport from './AttendanceReport'
+import ProjectReport    from './ProjectReport'
+import TeamReport       from './TeamReport'
+import PayrollReport    from './PayrollReport'
+import { useAuth }      from '@/hooks/useAuth'
+import { ROLES }        from '@/constants/roles'
+import { cn }           from '@/utils/cn'
+
+type ReportTab = 'attendance' | 'projects' | 'team' | 'payroll'
+
+const TABS: { id: ReportTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
+  { id: 'attendance', label: 'Attendance',   icon: <Calendar  size={15} /> },
+  { id: 'projects',   label: 'Projects',     icon: <BarChart2 size={15} /> },
+  { id: 'team',       label: 'Team',         icon: <Users     size={15} /> },
+  { id: 'payroll',    label: 'Payroll',      icon: <DollarSign size={15} />, adminOnly: true },
+]
+
+const ReportsPage = () => {
+  const { isAdmin, hasRole } = useAuth()
+  const canViewPayroll = isAdmin || hasRole(ROLES.HR)
+  const [tab, setTab] = useState<ReportTab>('attendance')
+
+  const visibleTabs = TABS.filter((t) => !t.adminOnly || canViewPayroll)
+
+  return (
+    <div className="space-y-5">
+      {/* ── Header ──────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Reports &amp; Analytics</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Data-driven insights across attendance, projects, team performance, and payroll.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Tab bar ─────────────────────────────────────────────── */}
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+        {visibleTabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={cn(
+              'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+              tab === t.id
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700',
+            )}
+          >
+            {t.icon}
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Report content ──────────────────────────────────────── */}
+      {tab === 'attendance' && <AttendanceReport />}
+      {tab === 'projects'   && <ProjectReport />}
+      {tab === 'team'       && <TeamReport />}
+      {tab === 'payroll'    && canViewPayroll && <PayrollReport />}
+    </div>
+  )
+}
+
 export default ReportsPage
