@@ -14,7 +14,8 @@ import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 import DashboardPage  from '@/pages/dashboard/DashboardPage'
 import AttendancePage from '@/pages/attendance/AttendancePage'
 import LeavePage      from '@/pages/leave/LeavePage'
-import ProjectsPage   from '@/pages/projects/ProjectsPage'
+import ProjectsPage      from '@/pages/projects/ProjectsPage'
+import ProjectDetailPage from '@/pages/projects/ProjectDetailPage'
 import TasksPage      from '@/pages/tasks/TasksPage'
 import StaffPage      from '@/pages/staff/StaffPage'
 import PayrollPage    from '@/pages/payroll/PayrollPage'
@@ -40,7 +41,8 @@ const App = () => (
       <Route path={ROUTES.DASHBOARD}  element={<DashboardPage />} />
       <Route path={ROUTES.ATTENDANCE} element={<AttendancePage />} />
       <Route path={ROUTES.LEAVE}      element={<LeavePage />} />
-      <Route path={ROUTES.PROJECTS}   element={<ProjectsPage />} />
+      <Route path={ROUTES.PROJECTS}        element={<ProjectsPage />} />
+      <Route path={ROUTES.PROJECT_DETAIL} element={<ProjectDetailPage />} />
       <Route path={ROUTES.TASKS}      element={<TasksPage />} />
       <Route path={ROUTES.SETTINGS}   element={<SettingsPage />} />
 
