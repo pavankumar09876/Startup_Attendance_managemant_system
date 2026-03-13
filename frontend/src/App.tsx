@@ -17,7 +17,8 @@ import LeavePage      from '@/pages/leave/LeavePage'
 import ProjectsPage      from '@/pages/projects/ProjectsPage'
 import ProjectDetailPage from '@/pages/projects/ProjectDetailPage'
 import TasksPage      from '@/pages/tasks/TasksPage'
-import StaffPage      from '@/pages/staff/StaffPage'
+import StaffPage            from '@/pages/staff/StaffPage'
+import EmployeeDetailPage   from '@/pages/staff/EmployeeDetailPage'
 import PayrollPage    from '@/pages/payroll/PayrollPage'
 import ReportsPage    from '@/pages/reports/ReportsPage'
 import SettingsPage   from '@/pages/settings/SettingsPage'
@@ -50,10 +51,16 @@ const App = () => (
       <Route
         path={ROUTES.STAFF}
         element={
-          <ProtectedRoute
-            allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.HR, ROLES.MANAGER]}
-          >
+          <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.HR, ROLES.MANAGER]}>
             <StaffPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.STAFF_DETAIL}
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.HR, ROLES.MANAGER]}>
+            <EmployeeDetailPage />
           </ProtectedRoute>
         }
       />
