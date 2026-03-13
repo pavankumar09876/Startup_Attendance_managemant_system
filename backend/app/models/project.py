@@ -17,10 +17,11 @@ class ProjectStatus(str, enum.Enum):
 
 
 class TaskStatus(str, enum.Enum):
-    TODO = "todo"
+    TODO        = "todo"
     IN_PROGRESS = "in_progress"
-    IN_REVIEW = "in_review"
-    DONE = "done"
+    IN_REVIEW   = "in_review"
+    DONE        = "done"
+    BLOCKED     = "blocked"
 
 
 class TaskPriority(str, enum.Enum):
@@ -55,7 +56,8 @@ class Project(Base):
 
     manager = relationship("User", foreign_keys=[manager_id])
     members = relationship("User", secondary=project_members)
-    tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
+    tasks   = relationship("Task",   back_populates="project", cascade="all, delete-orphan")
+    sprints = relationship("Sprint", back_populates="project", cascade="all, delete-orphan")
 
 
 class Task(Base):
@@ -73,5 +75,10 @@ class Task(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    sprint_id    = Column(UUID(as_uuid=True), ForeignKey("sprints.id", ondelete="SET NULL"),
+                          nullable=True, index=True)
+    story_points = Column(Integer, nullable=True)
+
     project = relationship("Project", back_populates="tasks")
     assignee = relationship("User", back_populates="assigned_tasks")
+    sprint   = relationship("Sprint", back_populates="tasks")

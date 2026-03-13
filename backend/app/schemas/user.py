@@ -38,6 +38,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    send_welcome_email: bool = False
 
 
 class UserUpdate(BaseModel):
@@ -55,6 +56,7 @@ class UserUpdate(BaseModel):
 class UserOut(UserBase):
     id: UUID4
     is_active: bool
+    must_change_password: bool = False
     created_at: datetime
     department: Optional[DepartmentOut] = None
 
@@ -75,4 +77,18 @@ class TokenOut(BaseModel):
 
 class ChangePassword(BaseModel):
     current_password: str
+    new_password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class SetFirstPassword(BaseModel):
+    """Used on forced first-login password change (no current_password needed)."""
     new_password: str

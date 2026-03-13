@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { ROLES } from '@/constants/roles'
 import { ROUTES } from '@/constants/routes'
+import { authService } from '@/services/auth.service'
 
 // Role → default landing page after login
 const ROLE_REDIRECT: Record<string, string> = {
@@ -29,8 +30,19 @@ export const useAuth = () => {
   const login = (userData: typeof user, accessToken: string) => {
     if (!userData) return
     setAuth(userData, accessToken)
+    // Force password change before anything else
+    if (userData.must_change_password) {
+      navigate(ROUTES.SET_PASSWORD, { replace: true })
+      return
+    }
     const redirect = ROLE_REDIRECT[userData.role] ?? ROUTES.DASHBOARD
     navigate(redirect, { replace: true })
+  }
+
+  /** Re-fetch the current user from the API and update the store. */
+  const refreshUser = async () => {
+    const latest = await authService.getMe()
+    setUser(latest)
   }
 
   /** Clear everything and go to /login. */
@@ -49,6 +61,7 @@ export const useAuth = () => {
     isManager,
     login,
     logout,
+    refreshUser,
     setAuth,
     setUser,
   }

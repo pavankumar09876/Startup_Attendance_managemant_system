@@ -9,6 +9,7 @@ import AppLayout from '@/components/layout/AppLayout'
 import LoginPage from '@/pages/auth/LoginPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
+import SetPasswordPage from '@/pages/auth/SetPasswordPage'
 
 // App pages
 import DashboardPage  from '@/pages/dashboard/DashboardPage'
@@ -29,6 +30,14 @@ const App = () => (
     <Route path={ROUTES.LOGIN}           element={<LoginPage />} />
     <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
     <Route path={ROUTES.RESET_PASSWORD}  element={<ResetPasswordPage />} />
+    <Route
+      path={ROUTES.SET_PASSWORD}
+      element={
+        <ProtectedRoute>
+          <SetPasswordPage />
+        </ProtectedRoute>
+      }
+    />
 
     {/* ── Protected routes (all roles) ──────────────────────── */}
     <Route

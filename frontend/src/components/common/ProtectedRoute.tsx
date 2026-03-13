@@ -40,6 +40,11 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />
   }
 
+  // Must change password → force to set-password page
+  if (user.must_change_password && location.pathname !== ROUTES.SET_PASSWORD) {
+    return <Navigate to={ROUTES.SET_PASSWORD} replace />
+  }
+
   // Authenticated but role not allowed → 403
   if (allowedRoles && !allowedRoles.includes(user.role as ROLES)) {
     return <Forbidden />

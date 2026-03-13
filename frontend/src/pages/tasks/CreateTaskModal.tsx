@@ -2,11 +2,12 @@ import { useState, KeyboardEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { X } from 'lucide-react'
 
 import { taskService } from '@/services/task.service'
+import { projectService } from '@/services/project.service'
 import type { TaskStatus, TaskPriority, ProjectMember } from '@/types/project.types'
 import Modal from '@/components/common/Modal'
 import Button from '@/components/common/Button'
@@ -36,14 +37,22 @@ const STATUSES: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'blo
 interface Props {
   projectId: string
   defaultStatus: TaskStatus
-  members: ProjectMember[]
+  members?: ProjectMember[]
+  sprintId?: string
   onClose: () => void
 }
 
-const CreateTaskModal = ({ projectId, defaultStatus, members, onClose }: Props) => {
+const CreateTaskModal = ({ projectId, defaultStatus, members: membersProp, sprintId, onClose }: Props) => {
   const [labels, setLabels]       = useState<string[]>([])
   const [labelInput, setLabelInput] = useState('')
   const queryClient = useQueryClient()
+
+  const { data: fetchedMembers = [] } = useQuery({
+    queryKey: ['project-members', projectId],
+    queryFn: () => projectService.getMembers(projectId),
+    enabled: !membersProp,
+  })
+  const members = membersProp ?? fetchedMembers
 
   const {
     register, handleSubmit, watch, setValue,
@@ -58,7 +67,7 @@ const CreateTaskModal = ({ projectId, defaultStatus, members, onClose }: Props) 
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormData) =>
-      taskService.create(projectId, { ...data, labels }),
+      taskService.create(projectId, { ...data, labels, sprint_id: sprintId }),
     onSuccess: () => {
       toast.success('Task created!')
       queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] })

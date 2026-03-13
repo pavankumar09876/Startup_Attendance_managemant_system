@@ -48,6 +48,8 @@ class TaskCreate(BaseModel):
     assignee_id: Optional[UUID4] = None
     due_date: Optional[date] = None
     estimated_hours: Optional[int] = None
+    sprint_id: Optional[UUID4] = None
+    story_points: Optional[int] = None
 
 
 class TaskUpdate(BaseModel):
@@ -58,6 +60,8 @@ class TaskUpdate(BaseModel):
     assignee_id: Optional[UUID4] = None
     due_date: Optional[date] = None
     estimated_hours: Optional[int] = None
+    sprint_id: Optional[UUID4] = None
+    story_points: Optional[int] = None
 
 
 class TaskOut(BaseModel):
@@ -70,6 +74,8 @@ class TaskOut(BaseModel):
     assignee_id: Optional[UUID4] = None
     due_date: Optional[date] = None
     estimated_hours: Optional[int] = None
+    sprint_id: Optional[UUID4] = None
+    story_points: Optional[int] = None
     created_at: datetime
 
     class Config:

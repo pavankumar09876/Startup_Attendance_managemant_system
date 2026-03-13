@@ -3,12 +3,30 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Optional
 import uuid
+import secrets
+import string
+import asyncio
 
 from app.database import get_db
 from app.models.user import User, Department, Role
 from app.schemas.user import UserCreate, UserUpdate, UserOut, DepartmentCreate, DepartmentOut
 from app.utils.security import hash_password
 from app.utils.dependencies import get_current_user, require_roles
+from app.utils.email import send_welcome_email
+
+
+def _generate_temp_password(length: int = 12) -> str:
+    """Generate a readable temporary password: letters + digits + one symbol."""
+    alphabet = string.ascii_letters + string.digits
+    password  = [
+        secrets.choice(string.ascii_uppercase),
+        secrets.choice(string.ascii_lowercase),
+        secrets.choice(string.digits),
+        secrets.choice("!@#$%"),
+    ]
+    password += [secrets.choice(alphabet) for _ in range(length - 4)]
+    secrets.SystemRandom().shuffle(password)
+    return "".join(password)
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -69,11 +87,33 @@ async def create_user(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    data = payload.model_dump(exclude={"password"})
-    user = User(**data, hashed_password=hash_password(payload.password))
+    # If caller sends a blank/placeholder password or send_welcome_email flag,
+    # auto-generate a temporary password and require change on first login.
+    send_email   = getattr(payload, "send_welcome_email", False)
+    raw_password = payload.password.strip() if payload.password else ""
+    temp_password: Optional[str] = None
+
+    if send_email or not raw_password:
+        temp_password = _generate_temp_password()
+        raw_password  = temp_password
+
+    data = payload.model_dump(exclude={"password", "send_welcome_email"})
+    user = User(
+        **data,
+        hashed_password=hash_password(raw_password),
+        must_change_password=True,   # always force on first login
+    )
     db.add(user)
     await db.commit()
     await db.refresh(user)
+
+    # Fire-and-forget welcome email (non-blocking)
+    if send_email and temp_password:
+        full_name = f"{user.first_name} {user.last_name}"
+        asyncio.create_task(
+            asyncio.to_thread(send_welcome_email, user.email, full_name, temp_password)
+        )
+
     return user
 
 

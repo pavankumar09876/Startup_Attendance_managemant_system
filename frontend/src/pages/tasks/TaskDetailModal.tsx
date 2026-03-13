@@ -36,11 +36,13 @@ const InlineEdit = ({
   onSave,
   multiline = false,
   className = '',
+  readOnly = false,
 }: {
   value: string
   onSave: (v: string) => void
   multiline?: boolean
   className?: string
+  readOnly?: boolean
 }) => {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft]     = useState(value)
@@ -70,6 +72,19 @@ const InlineEdit = ({
     return multiline
       ? <textarea rows={4} {...shared} className={`${shared.className} resize-none`} />
       : <input {...shared} />
+  }
+
+  if (readOnly) {
+    return (
+      <div className={cn('px-1 -mx-1', className)}>
+        <span className={cn(
+          'flex-1',
+          multiline ? 'whitespace-pre-wrap text-sm text-gray-600' : 'font-semibold text-lg text-gray-900',
+        )}>
+          {value || <span className="text-gray-400 italic">{multiline ? 'No description.' : 'Untitled'}</span>}
+        </span>
+      </div>
+    )
   }
 
   return (
@@ -169,9 +184,10 @@ interface Props {
   task: Task
   members: ProjectMember[]
   onClose: () => void
+  canManage?: boolean
 }
 
-const TaskDetailModal = ({ task: initialTask, members, onClose }: Props) => {
+const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = false }: Props) => {
   const [showLogTime, setShowLogTime] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [newSubtask, setNewSubtask]   = useState('')
@@ -278,6 +294,7 @@ const TaskDetailModal = ({ task: initialTask, members, onClose }: Props) => {
           <InlineEdit
             value={task.title}
             onSave={(v) => updateField({ title: v })}
+            readOnly={!canManage}
           />
 
           {/* Project tag */}
@@ -297,6 +314,7 @@ const TaskDetailModal = ({ task: initialTask, members, onClose }: Props) => {
               value={task.description ?? ''}
               onSave={(v) => updateField({ description: v })}
               multiline
+              readOnly={!canManage}
             />
           </div>
 
@@ -348,24 +366,26 @@ const TaskDetailModal = ({ task: initialTask, members, onClose }: Props) => {
             </div>
 
             {/* Add subtask input */}
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                value={newSubtask}
-                onChange={(e) => setNewSubtask(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSubtaskAdd()}
-                placeholder="Add a subtask…"
-                className="flex-1 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm
-                  focus:outline-none focus:border-blue-400 focus:border-solid placeholder:text-gray-400"
-              />
-              <button
-                onClick={handleSubtaskAdd}
-                disabled={!newSubtask.trim()}
-                className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100
-                  disabled:opacity-40 transition-colors"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
+            {canManage && (
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  value={newSubtask}
+                  onChange={(e) => setNewSubtask(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSubtaskAdd()}
+                  placeholder="Add a subtask…"
+                  className="flex-1 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm
+                    focus:outline-none focus:border-blue-400 focus:border-solid placeholder:text-gray-400"
+                />
+                <button
+                  onClick={handleSubtaskAdd}
+                  disabled={!newSubtask.trim()}
+                  className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100
+                    disabled:opacity-40 transition-colors"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Comments */}
@@ -460,12 +480,14 @@ const TaskDetailModal = ({ task: initialTask, members, onClose }: Props) => {
               {PRIORITY_OPTIONS.map((p) => (
                 <button
                   key={p}
-                  onClick={() => updateField({ priority: p })}
+                  onClick={() => canManage && updateField({ priority: p })}
+                  disabled={!canManage}
                   className={cn(
                     'px-2 py-1.5 rounded-lg text-xs font-semibold transition-all border capitalize',
                     task.priority === p
                       ? `${PRIORITY_COLORS[p]} border-transparent ring-2 ring-offset-1 ring-current`
                       : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-100',
+                    !canManage && 'cursor-default opacity-80',
                   )}
                 >
                   {p}
@@ -477,21 +499,24 @@ const TaskDetailModal = ({ task: initialTask, members, onClose }: Props) => {
           {/* Assignee */}
           <div>
             <p className="text-xs text-gray-500 mb-1.5">Assignee</p>
-            <select
-              value={task.assignee_id ?? ''}
-              onChange={(e) => updateField({ assignee_id: e.target.value || undefined })}
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Unassigned</option>
-              {members.map((m) => (
-                <option key={m.user_id} value={m.user_id}>{m.name}</option>
-              ))}
-            </select>
-            {task.assignee_name && (
-              <div className="flex items-center gap-2 mt-1.5">
-                <Avatar name={task.assignee_name} src={task.assignee_avatar} size="xs" />
-                <span className="text-xs text-gray-500">{task.assignee_name}</span>
+            {canManage ? (
+              <select
+                value={task.assignee_id ?? ''}
+                onChange={(e) => updateField({ assignee_id: e.target.value || undefined })}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white
+                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Unassigned</option>
+                {members.map((m) => (
+                  <option key={m.user_id} value={m.user_id}>{m.name}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50">
+                {task.assignee_name
+                  ? <><Avatar name={task.assignee_name} src={task.assignee_avatar} size="xs" /><span className="text-sm text-gray-700">{task.assignee_name}</span></>
+                  : <span className="text-sm text-gray-400">Unassigned</span>
+                }
               </div>
             )}
           </div>
@@ -502,9 +527,13 @@ const TaskDetailModal = ({ task: initialTask, members, onClose }: Props) => {
             <input
               type="date"
               value={task.due_date ?? ''}
-              onChange={(e) => updateField({ due_date: e.target.value || undefined })}
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => canManage && updateField({ due_date: e.target.value || undefined })}
+              readOnly={!canManage}
+              className={cn(
+                'w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white',
+                'focus:outline-none focus:ring-2 focus:ring-blue-500',
+                !canManage && 'bg-gray-50 cursor-default',
+              )}
             />
           </div>
 

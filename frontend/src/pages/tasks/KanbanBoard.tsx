@@ -19,9 +19,10 @@ const STATUSES: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'blo
 
 interface Props {
   projectId: string
+  canManage?: boolean
 }
 
-const KanbanBoard = ({ projectId }: Props) => {
+const KanbanBoard = ({ projectId, canManage = false }: Props) => {
   const [activeTask, setActiveTask]   = useState<Task | null>(null)
   const [createStatus, setCreateStatus] = useState<TaskStatus | null>(null)
   const [detailTask, setDetailTask]   = useState<Task | null>(null)
@@ -120,6 +121,7 @@ const KanbanBoard = ({ projectId }: Props) => {
               tasks={grouped[status] ?? []}
               onAddTask={(s) => setCreateStatus(s)}
               onTaskClick={(t) => setDetailTask(t)}
+              canManage={canManage}
             />
           ))}
         </div>
@@ -154,6 +156,7 @@ const KanbanBoard = ({ projectId }: Props) => {
         <TaskDetailModal
           task={detailTask}
           members={members}
+          canManage={canManage}
           onClose={() => setDetailTask(null)}
         />
       )}

@@ -1,21 +1,23 @@
 import { useState } from 'react'
-import { BarChart2, Calendar, Users, DollarSign } from 'lucide-react'
+import { BarChart2, Calendar, Users, DollarSign, Clock } from 'lucide-react'
 
 import AttendanceReport from './AttendanceReport'
 import ProjectReport    from './ProjectReport'
 import TeamReport       from './TeamReport'
 import PayrollReport    from './PayrollReport'
+import ReportScheduler  from './ReportScheduler'
 import { useAuth }      from '@/hooks/useAuth'
 import { ROLES }        from '@/constants/roles'
 import { cn }           from '@/utils/cn'
 
-type ReportTab = 'attendance' | 'projects' | 'team' | 'payroll'
+type ReportTab = 'attendance' | 'projects' | 'team' | 'payroll' | 'scheduled'
 
 const TABS: { id: ReportTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
   { id: 'attendance', label: 'Attendance',   icon: <Calendar  size={15} /> },
   { id: 'projects',   label: 'Projects',     icon: <BarChart2 size={15} /> },
   { id: 'team',       label: 'Team',         icon: <Users     size={15} /> },
   { id: 'payroll',    label: 'Payroll',      icon: <DollarSign size={15} />, adminOnly: true },
+  { id: 'scheduled',  label: 'Scheduled',    icon: <Clock      size={15} />, adminOnly: true },
 ]
 
 const ReportsPage = () => {
@@ -61,6 +63,7 @@ const ReportsPage = () => {
       {tab === 'projects'   && <ProjectReport />}
       {tab === 'team'       && <TeamReport />}
       {tab === 'payroll'    && canViewPayroll && <PayrollReport />}
+      {tab === 'scheduled'  && canViewPayroll && <ReportScheduler />}
     </div>
   )
 }

@@ -20,9 +20,10 @@ interface Props {
   onAddTask: (status: TaskStatus) => void
   onTaskClick: (task: Task) => void
   showProject?: boolean
+  canManage?: boolean
 }
 
-const KanbanColumn = ({ status, tasks, onAddTask, onTaskClick, showProject }: Props) => {
+const KanbanColumn = ({ status, tasks, onAddTask, onTaskClick, showProject, canManage }: Props) => {
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const config = COLUMN_CONFIG[status]
 
@@ -38,13 +39,15 @@ const KanbanColumn = ({ status, tasks, onAddTask, onTaskClick, showProject }: Pr
             {tasks.length}
           </span>
         </div>
-        <button
-          onClick={() => onAddTask(status)}
-          className="p-1 rounded-md text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors"
-          title={`Add task to ${config.label}`}
-        >
-          <Plus size={14} />
-        </button>
+        {canManage && (
+          <button
+            onClick={() => onAddTask(status)}
+            className="p-1 rounded-md text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors"
+            title={`Add task to ${config.label}`}
+          >
+            <Plus size={14} />
+          </button>
+        )}
       </div>
 
       {/* Drop zone */}

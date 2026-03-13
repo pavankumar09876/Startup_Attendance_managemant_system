@@ -63,4 +63,9 @@ export const attendanceService = {
 
   checkOut: () =>
     api.post<Attendance>('/api/attendance/check-out').then((r) => r.data),
+
+  getByRange: (startDate: string, endDate: string, employeeId?: string) =>
+    api.get<Attendance[]>('/api/attendance', {
+      params: { start_date: startDate, end_date: endDate, employee_id: employeeId, limit: 400 },
+    }).then((r) => r.data),
 }

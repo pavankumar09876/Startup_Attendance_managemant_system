@@ -4,12 +4,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
   ArrowLeft, Edit2, Archive, Plus, CheckCircle2,
-  Clock, Flag, Users, DollarSign, BarChart2, X, Search,
+  Clock, Flag, Users, DollarSign, BarChart2, X, Search, Layers,
 } from 'lucide-react'
 
 import { projectService } from '@/services/project.service'
 import { userService } from '@/services/user.service'
 import KanbanBoard from '@/pages/tasks/KanbanBoard'
+import SprintBoard from './SprintBoard'
+import BurndownChart from './BurndownChart'
 import type { Task, ProjectMember, TaskStatus, TaskPriority } from '@/types/project.types'
 import { ROUTES } from '@/constants/routes'
 import { useAuth } from '@/hooks/useAuth'
@@ -22,11 +24,12 @@ import EmptyState from '@/components/common/EmptyState'
 import { cn } from '@/utils/cn'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-type TabId = 'overview' | 'tasks' | 'team' | 'budget'
+type TabId = 'overview' | 'sprints' | 'tasks' | 'team' | 'budget'
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <BarChart2 size={14} /> },
-  { id: 'tasks',    label: 'Tasks',    icon: <CheckCircle2 size={14} /> },
+  { id: 'sprints',  label: 'Sprints',  icon: <Layers size={14} /> },
+  { id: 'tasks',    label: 'Board',    icon: <CheckCircle2 size={14} /> },
   { id: 'team',     label: 'Team',     icon: <Users size={14} /> },
   { id: 'budget',   label: 'Budget',   icon: <DollarSign size={14} /> },
 ]
@@ -46,6 +49,7 @@ const TASK_STATUS_COLORS: Record<TaskStatus, string> = {
   in_progress: 'bg-blue-100 text-blue-700',
   in_review:   'bg-purple-100 text-purple-700',
   done:        'bg-green-100 text-green-700',
+  blocked:     'bg-red-100 text-red-700',
 }
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
@@ -363,6 +367,16 @@ const OverviewTab = ({ projectId }: { projectId: string }) => {
           </div>
         ))}
       </div>
+
+      {/* Burndown chart */}
+      {project.start_date && project.end_date && (
+        <BurndownChart
+          projectId={projectId}
+          startDate={project.start_date}
+          endDate={project.end_date}
+          totalTasks={project.total_tasks ?? 0}
+        />
+      )}
 
       {/* Milestones */}
       <div className="card p-5">
@@ -742,17 +756,26 @@ const BudgetTab = ({ projectId }: { projectId: string }) => {
 const ProjectDetailPage = () => {
   const { id }            = useParams<{ id: string }>()
   const navigate          = useNavigate()
-  const { isAdmin, isManager } = useAuth()
+  const { isAdmin, isManager, user } = useAuth()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const queryClient       = useQueryClient()
-
-  const canManage = isAdmin || isManager
 
   const { data: project, isLoading } = useQuery({
     queryKey: ['project', id],
     queryFn: () => projectService.get(id!),
     enabled: !!id,
   })
+
+  const { data: members = [] } = useQuery({
+    queryKey: ['project-members', id],
+    queryFn: () => projectService.getMembers(id!),
+    enabled: !!id,
+  })
+
+  const isProjectLead = members.some(
+    (m) => m.user_id === user?.id && m.role_in_project === 'lead',
+  )
+  const canManage = isAdmin || isManager || isProjectLead
 
   const { mutate: archive } = useMutation({
     mutationFn: () => projectService.archive(id!),
@@ -894,9 +917,10 @@ const ProjectDetailPage = () => {
 
       {/* ── Tab content ─────────────────────────────────────── */}
       {activeTab === 'overview' && <OverviewTab projectId={id!} />}
-      {activeTab === 'tasks'    && <KanbanBoard projectId={id!} />}
-      {activeTab === 'team'     && <TeamTab     projectId={id!} canManage={canManage} />}
-      {activeTab === 'budget'   && <BudgetTab   projectId={id!} />}
+      {activeTab === 'sprints'  && <SprintBoard  projectId={id!} canManage={canManage} />}
+      {activeTab === 'tasks'    && <KanbanBoard  projectId={id!} canManage={canManage} />}
+      {activeTab === 'team'     && <TeamTab      projectId={id!} canManage={canManage} />}
+      {activeTab === 'budget'   && <BudgetTab    projectId={id!} />}
     </div>
   )
 }

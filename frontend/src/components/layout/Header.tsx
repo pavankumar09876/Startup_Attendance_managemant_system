@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Bell, ChevronDown, User, Settings, LogOut } from 'lucide-react'
+import { ChevronDown, User, Settings, LogOut, Moon, Sun, Search, Menu } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useDarkMode } from '@/hooks/useDarkMode'
 import { ROUTES } from '@/constants/routes'
 import Avatar from '@/components/common/Avatar'
+import NotificationBell from '@/components/common/NotificationBell'
 
 // Map route path → page title
 const PAGE_TITLES: Record<string, string> = {
@@ -19,8 +21,9 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.PROFILE]:    'My Profile',
 }
 
-const Header = () => {
+const Header = ({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const { isDark, toggle: toggleDark } = useDarkMode()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -34,16 +37,43 @@ const Header = () => {
   }
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-      {/* Page title */}
-      <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+    <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 md:px-6">
+      <div className="flex items-center gap-3">
+        {/* Mobile hamburger */}
+        {onMobileMenuToggle && (
+          <button
+            onClick={onMobileMenuToggle}
+            className="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <Menu size={18} />
+          </button>
+        )}
+        {/* Page title */}
+        <h1 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">{title}</h1>
+      </div>
 
       <div className="flex items-center gap-3">
-        {/* Notification bell */}
-        <button className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+        {/* Ctrl+K hint */}
+        <button
+          onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+          className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 text-xs transition-colors"
+        >
+          <Search size={12} />
+          <span>Search</span>
+          <kbd className="text-[10px] bg-gray-100 dark:bg-gray-700 px-1 rounded font-mono">⌘K</kbd>
         </button>
+
+        {/* Dark mode toggle */}
+        <button
+          onClick={toggleDark}
+          className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+
+        {/* Notification bell */}
+        <NotificationBell />
 
         {/* User dropdown */}
         <div className="relative">

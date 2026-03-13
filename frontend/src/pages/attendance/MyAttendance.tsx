@@ -12,6 +12,7 @@ import {
 
 import { attendanceService } from '@/services/attendance.service'
 import { useAuth } from '@/hooks/useAuth'
+import AttendanceHeatmap from './AttendanceHeatmap'
 import type { Attendance, TodayStatus, Regularization } from '@/types/attendance.types'
 import { formatDate } from '@/utils/formatDate'
 import { ATTENDANCE_STATUS_COLORS } from '@/constants/status'
@@ -463,6 +464,9 @@ const MyAttendance = () => {
 
       {/* Calendar */}
       <AttendanceCalendar records={records} />
+
+      {/* Yearly heatmap */}
+      <AttendanceHeatmap employeeId={user?.id} />
 
       {/* Regularizations */}
       <RegularizationList onNew={() => setRegModalOpen(true)} />

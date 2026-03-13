@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 
 import App from './App'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
+import CommandPalette from '@/components/common/CommandPalette'
 import './index.css'
 
 const queryClient = new QueryClient({
@@ -18,9 +20,11 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <App />
+        <CommandPalette />
         <Toaster
           position="top-right"
           toastOptions={{
@@ -31,5 +35,6 @@ createRoot(document.getElementById('root')!).render(
         />
       </BrowserRouter>
     </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

@@ -43,6 +43,7 @@ export interface User {
   ifsc_code?: string
   avatar_url?: string
   is_active: boolean
+  must_change_password: boolean
   created_at: string
 }
 

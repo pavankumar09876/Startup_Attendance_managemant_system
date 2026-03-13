@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
 
+    # SMTP (optional — leave blank to skip email sending)
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASS: Optional[str] = None
+    EMAIL_FROM: str = "noreply@workforcepro.com"
+
     class Config:
         env_file = ".env"
 

@@ -54,6 +54,30 @@ export interface Project {
   created_at: string
 }
 
+export type SprintStatus = 'planned' | 'active' | 'completed'
+
+export interface Sprint {
+  id: string
+  project_id: string
+  name: string
+  goal?: string
+  status: SprintStatus
+  start_date?: string
+  end_date?: string
+  capacity?: number
+  completed_at?: string
+  created_at: string
+  // Computed metrics
+  total_tasks: number
+  completed_tasks: number
+  completion_pct: number
+  total_story_points: number
+  completed_story_points: number
+  velocity?: number
+  days_remaining?: number
+  burn_rate?: number
+}
+
 export interface Task {
   id: string
   project_id: string
@@ -71,6 +95,8 @@ export interface Task {
   labels?: string[]
   subtask_count?: number
   completed_subtasks?: number
+  sprint_id?: string
+  story_points?: number
   created_at: string
 }
 

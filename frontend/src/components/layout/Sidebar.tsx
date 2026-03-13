@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Clock, CalendarOff, FolderKanban,
   CheckSquare, Users, Wallet, BarChart2, Settings,
-  ChevronLeft, ChevronRight, LogOut, Briefcase,
+  ChevronLeft, ChevronRight, LogOut, Briefcase, X,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useAuth } from '@/hooks/useAuth'
@@ -45,7 +45,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Settings', path: ROUTES.SETTINGS, icon: <Settings size={18} /> },
 ]
 
-const Sidebar = () => {
+const Sidebar = ({ onMobileClose }: { onMobileClose?: () => void }) => {
   const [collapsed, setCollapsed] = useState(false)
   const { user, hasRole, logout } = useAuth()
   const navigate = useNavigate()
@@ -74,7 +74,12 @@ const Sidebar = () => {
           <Briefcase size={16} className="text-white" />
         </div>
         {!collapsed && (
-          <span className="text-white font-semibold text-[15px] truncate">Workforce Pro</span>
+          <span className="text-white font-semibold text-[15px] truncate flex-1">Workforce Pro</span>
+        )}
+        {onMobileClose && (
+          <button onClick={onMobileClose} className="lg:hidden text-sidebar-text hover:text-white transition-colors">
+            <X size={16} />
+          </button>
         )}
       </div>
 

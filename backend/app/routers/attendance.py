@@ -188,3 +188,88 @@ async def get_summary(
         ) if records else 0.0,
     )
     return summary
+
+
+# ── Geo-fenced + selfie check-in ─────────────────────────────────────────────
+from fastapi import Form
+from typing import Optional as Opt
+
+@router.post('/check-in/geo', response_model=AttendanceOut)
+async def check_in_geo(
+    latitude:   float = Form(...),
+    longitude:  float = Form(...),
+    selfie:     Opt[UploadFile] = None,
+    db:         AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Check in with geo-coordinates and optional selfie."""
+    import math, os
+    from fastapi import UploadFile
+
+    # Load attendance config for geofence settings
+    from app.models.settings import AttendanceConfig
+    from sqlalchemy import select as _select
+    config_res = await db.execute(_select(AttendanceConfig).limit(1))
+    config = config_res.scalar_one_or_none()
+
+    # Validate geofence if office location is set
+    if config and config.office_lat and config.office_lng and config.geofence_radius_meters:
+        # Haversine distance
+        R = 6371000  # Earth radius in metres
+        lat1, lon1 = math.radians(config.office_lat), math.radians(config.office_lng)
+        lat2, lon2 = math.radians(latitude),           math.radians(longitude)
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = math.sin(dlat/2)**2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2)**2
+        dist = R * 2 * math.asin(math.sqrt(a))
+        if dist > config.geofence_radius_meters:
+            raise HTTPException(
+                status_code=400,
+                detail=f'You are {int(dist)}m from the office (max {config.geofence_radius_meters}m).'
+            )
+
+    # Save selfie if provided
+    selfie_url = None
+    if selfie:
+        upload_dir = 'uploads/selfies'
+        os.makedirs(upload_dir, exist_ok=True)
+        ext = os.path.splitext(selfie.filename or 'selfie.jpg')[1]
+        fname = f'{current_user.id}_{date.today()}{ext}'
+        path = os.path.join(upload_dir, fname)
+        content = await selfie.read()
+        with open(path, 'wb') as f:
+            f.write(content)
+        selfie_url = f'/uploads/selfies/{fname}'
+
+    # Now do the normal check-in
+    today = date.today()
+    existing = await db.execute(
+        select(Attendance).where(
+            Attendance.employee_id == current_user.id,
+            Attendance.date == today,
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail='Already checked in today')
+
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).time().replace(tzinfo=None)
+    late_after_min = (config.grace_period_minutes if config else 10)
+    cutoff_h, cutoff_m = 9, 0 + late_after_min
+    status = (
+        AttendanceStatus.LATE
+        if now.hour > 9 or (now.hour == 9 and now.minute > late_after_min)
+        else AttendanceStatus.PRESENT
+    )
+
+    record = Attendance(
+        employee_id=current_user.id,
+        date=today,
+        check_in=now,
+        status=status,
+        notes=selfie_url,
+    )
+    db.add(record)
+    await db.commit()
+    await db.refresh(record)
+    return record

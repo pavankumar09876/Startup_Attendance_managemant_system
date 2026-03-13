@@ -18,6 +18,7 @@ import { cn } from '@/utils/cn'
 import AddEmployeeModal from './AddEmployeeModal'
 import EditEmployeeModal from './EditEmployeeModal'
 import DepartmentsPage from './DepartmentsPage'
+import BulkImportModal from './BulkImportModal'
 
 type PageTab  = 'employees' | 'departments'
 type ViewMode = 'grid' | 'list'
@@ -148,6 +149,7 @@ const StaffPage = () => {
   const [roleFilter, setRoleFilter]     = useState('')
   const [statusFilter, setStatus]       = useState<'' | 'active' | 'inactive'>('')
   const [addOpen, setAddOpen]           = useState(false)
+  const [importOpen, setImportOpen]     = useState(false)
   const [editEmployee, setEditEmployee] = useState<User | null>(null)
 
   const debouncedSearch = useDebounce(search, 300)
@@ -201,9 +203,14 @@ const StaffPage = () => {
           </button>
         </div>
         {pageTab === 'employees' && canManage && (
-          <Button variant="primary" leftIcon={<Plus size={15} />} onClick={() => setAddOpen(true)}>
-            Add Employee
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" leftIcon={<Plus size={15} />} onClick={() => setImportOpen(true)}>
+              Import CSV
+            </Button>
+            <Button variant="primary" leftIcon={<Plus size={15} />} onClick={() => setAddOpen(true)}>
+              Add Employee
+            </Button>
+          </div>
         )}
       </div>
 
@@ -336,6 +343,7 @@ const StaffPage = () => {
       )}
 
       <AddEmployeeModal open={addOpen} onClose={() => setAddOpen(false)} />
+      <BulkImportModal open={importOpen} onClose={() => setImportOpen(false)} />
       {editEmployee && (
         <EditEmployeeModal employee={editEmployee} onClose={() => setEditEmployee(null)} />
       )}

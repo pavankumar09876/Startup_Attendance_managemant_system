@@ -29,12 +29,13 @@ const STATUS_TABS: { id: ProjectStatus | 'all'; label: string }[] = [
 ]
 
 const STATUS_COLORS: Record<ProjectStatus, string> = {
-  planning:   'bg-gray-100 text-gray-600',
-  active:     'bg-blue-100 text-blue-700',
-  on_hold:    'bg-amber-100 text-amber-700',
-  completed:  'bg-green-100 text-green-700',
-  cancelled:  'bg-red-100 text-red-700',
-  archived:   'bg-gray-100 text-gray-500',
+  planning:    'bg-gray-100 text-gray-600',
+  active:      'bg-blue-100 text-blue-700',
+  in_progress: 'bg-blue-100 text-blue-700',
+  on_hold:     'bg-amber-100 text-amber-700',
+  completed:   'bg-green-100 text-green-700',
+  cancelled:   'bg-red-100 text-red-700',
+  archived:    'bg-gray-100 text-gray-500',
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -309,7 +310,7 @@ const ProjectsPage = () => {
     staleTime: 1000 * 30,
   })
 
-  const projects: Project[] = data ?? []
+  const projects: Project[] = data?.projects ?? []
 
   const canCreate = isAdmin || isManager
 
