@@ -21,6 +21,7 @@ import Badge from '@/components/common/Badge'
 import Button from '@/components/common/Button'
 import Modal from '@/components/common/Modal'
 import EmptyState from '@/components/common/EmptyState'
+import DatePicker from '@/components/common/DatePicker'
 import { cn } from '@/utils/cn'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -35,17 +36,17 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 ]
 
 const STATUS_COLORS: Record<string, string> = {
-  planning:    'bg-gray-100 text-gray-600',
+  planning:    'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300',
   active:      'bg-blue-100 text-blue-700',
   in_progress: 'bg-blue-100 text-blue-700',
   on_hold:     'bg-amber-100 text-amber-700',
   completed:   'bg-green-100 text-green-700',
   cancelled:   'bg-red-100 text-red-700',
-  archived:    'bg-gray-100 text-gray-500',
+  archived:    'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
 }
 
 const TASK_STATUS_COLORS: Record<TaskStatus, string> = {
-  todo:        'bg-gray-100 text-gray-600',
+  todo:        'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300',
   in_progress: 'bg-blue-100 text-blue-700',
   in_review:   'bg-purple-100 text-purple-700',
   done:        'bg-green-100 text-green-700',
@@ -53,7 +54,7 @@ const TASK_STATUS_COLORS: Record<TaskStatus, string> = {
 }
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  low:      'bg-gray-100 text-gray-500',
+  low:      'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
   medium:   'bg-blue-100 text-blue-600',
   high:     'bg-amber-100 text-amber-700',
   critical: 'bg-red-100 text-red-700',
@@ -107,23 +108,25 @@ const TaskModal = ({
     <Modal open onClose={onClose} title={isEdit ? 'Edit Task' : 'New Task'} size="md">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Title *</label>
           <input
             value={form.title}
             onChange={(e) => set('title', e.target.value)}
             placeholder="Task title…"
-            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
+            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+              bg-white dark:bg-gray-900 text-gray-900 dark:text-white
               focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Status</label>
             <select
               value={form.status}
               onChange={(e) => set('status', e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {(['todo', 'in_progress', 'in_review', 'done'] as TaskStatus[]).map((s) => (
@@ -132,11 +135,12 @@ const TaskModal = ({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Priority</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Priority</label>
             <select
               value={form.priority}
               onChange={(e) => set('priority', e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {(['low', 'medium', 'high', 'critical'] as TaskPriority[]).map((p) => (
@@ -148,11 +152,12 @@ const TaskModal = ({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Assignee</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Assignee</label>
             <select
               value={form.assignee_id}
               onChange={(e) => set('assignee_id', e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Unassigned</option>
@@ -162,19 +167,13 @@ const TaskModal = ({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Due Date</label>
-            <input
-              type="date"
-              value={form.due_date}
-              onChange={(e) => set('due_date', e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Due Date</label>
+            <DatePicker value={form.due_date} onChange={(v) => set('due_date', v)} placeholder="Select due date" />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
             Estimated Hours
           </label>
           <input
@@ -183,20 +182,22 @@ const TaskModal = ({
             value={form.estimated_hours}
             onChange={(e) => set('estimated_hours', e.target.value)}
             placeholder="e.g. 8"
-            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
+            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+              bg-white dark:bg-gray-900 text-gray-900 dark:text-white
               focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Description</label>
           <textarea
             rows={3}
             value={form.description}
             onChange={(e) => set('description', e.target.value)}
             placeholder="Optional task description…"
-            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm resize-none
-              focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm resize-none
+              bg-white dark:bg-gray-900 text-gray-900 dark:text-white
+              focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:placeholder-gray-500"
           />
         </div>
 
@@ -230,7 +231,7 @@ const AddMemberModal = ({
 }) => {
   const [search, setSearch]   = useState('')
   const [selected, setSelected] = useState<{ id: string; name: string } | null>(null)
-  const [role, setRole]         = useState('member')
+  const [role, setRole]         = useState('contributor')
   const queryClient             = useQueryClient()
 
   const { data: users = [] } = useQuery({
@@ -256,34 +257,35 @@ const AddMemberModal = ({
     <Modal open onClose={onClose} title="Add Team Member" size="sm">
       <div className="space-y-4">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search employees…"
-            className="w-full pl-8 pr-3 py-2.5 rounded-lg border border-gray-300 text-sm
+            className="w-full pl-8 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+              bg-white dark:bg-gray-900 text-gray-900 dark:text-white
               focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         {filteredUsers.length > 0 && (
-          <div className="border border-gray-200 rounded-lg divide-y max-h-40 overflow-y-auto">
+          <div className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-40 overflow-y-auto">
             {filteredUsers.map((u: any) => (
               <button
                 key={u.id}
                 type="button"
                 onClick={() => setSelected({ id: u.id, name: u.full_name ?? u.email })}
                 className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors text-left',
-                  selected?.id === u.id && 'bg-blue-50',
+                  'w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left',
+                  selected?.id === u.id && 'bg-blue-50 dark:bg-blue-900/20',
                 )}
               >
                 <Avatar name={u.full_name ?? u.email} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
                     {u.full_name ?? u.email}
                   </p>
-                  <p className="text-xs text-gray-400">{u.role}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{u.role}</p>
                 </div>
                 {selected?.id === u.id && (
                   <CheckCircle2 size={14} className="text-blue-600 shrink-0" />
@@ -295,18 +297,19 @@ const AddMemberModal = ({
 
         {selected && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Role in project
             </label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="member">Member</option>
-              <option value="lead">Lead</option>
-              <option value="reviewer">Reviewer</option>
+              <option value="contributor">Contributor</option>
+              <option value="manager">Manager</option>
+              <option value="viewer">Viewer</option>
             </select>
           </div>
         )}
@@ -348,8 +351,8 @@ const OverviewTab = ({ projectId }: { projectId: string }) => {
       {/* Description */}
       {project.description && (
         <div className="card p-5">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
-          <p className="text-sm text-gray-600 leading-relaxed">{project.description}</p>
+          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Description</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{project.description}</p>
         </div>
       )}
 
@@ -362,8 +365,8 @@ const OverviewTab = ({ projectId }: { projectId: string }) => {
           { label: 'Team Size',   value: `${project.member_count ?? project.members?.length ?? 0} members` },
         ].map(({ label, value }) => (
           <div key={label} className="card p-4 text-center">
-            <p className="text-xs text-gray-500 mb-1">{label}</p>
-            <p className="text-sm font-semibold text-gray-800">{value}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{value}</p>
           </div>
         ))}
       </div>
@@ -380,13 +383,13 @@ const OverviewTab = ({ projectId }: { projectId: string }) => {
 
       {/* Milestones */}
       <div className="card p-5">
-        <h4 className="text-sm font-semibold text-gray-700 mb-4">Milestones</h4>
+        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Milestones</h4>
         {milestones.length === 0 ? (
-          <p className="text-xs text-gray-400 text-center py-4">No milestones added yet.</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-4">No milestones added yet.</p>
         ) : (
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-3.5 top-2 bottom-2 w-px bg-gray-200" />
+            <div className="absolute left-3.5 top-2 bottom-2 w-px bg-gray-200 dark:bg-gray-700" />
             <div className="space-y-4">
               {milestones.map((m) => (
                 <div key={m.id} className="flex items-start gap-4 pl-9 relative">
@@ -394,11 +397,11 @@ const OverviewTab = ({ projectId }: { projectId: string }) => {
                     'absolute left-2 top-1.5 w-3 h-3 rounded-full border-2',
                     m.status === 'completed' ? 'bg-green-500 border-green-500'
                       : m.status === 'overdue' ? 'bg-red-500 border-red-500'
-                        : 'bg-white border-gray-300',
+                        : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600',
                   )} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800">{m.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{m.name}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                       {formatDate(m.due_date, 'MMM d, yyyy')}
                     </p>
                   </div>
@@ -407,7 +410,7 @@ const OverviewTab = ({ projectId }: { projectId: string }) => {
                     className={
                       m.status === 'completed' ? 'bg-green-100 text-green-700'
                         : m.status === 'overdue' ? 'bg-red-100 text-red-700'
-                          : 'bg-gray-100 text-gray-600'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
                     }
                   />
                 </div>
@@ -471,7 +474,7 @@ const TasksTab = ({
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-12 bg-gray-100 animate-pulse rounded-lg" />
+            <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
           ))}
         </div>
       ) : tasks.length === 0 ? (
@@ -491,7 +494,7 @@ const TasksTab = ({
                 )}>
                   {status.replace(/_/g, ' ')}
                 </span>
-                <span className="text-xs text-gray-400">{col.length}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{col.length}</span>
               </div>
               {col.map((task) => (
                 <div
@@ -500,7 +503,7 @@ const TasksTab = ({
                   onClick={() => canManage && setTaskModal(task)}
                 >
                   <div className="flex items-start justify-between gap-1 mb-2">
-                    <p className="text-sm font-medium text-gray-800 leading-tight line-clamp-2">
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100 leading-tight line-clamp-2">
                       {task.title}
                     </p>
                     {canManage && (
@@ -522,7 +525,7 @@ const TasksTab = ({
                       </span>
                     )}
                     {task.due_date && (
-                      <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-0.5">
                         <Clock size={9} />
                         {formatDate(task.due_date, 'MMM d')}
                       </span>
@@ -593,7 +596,7 @@ const TeamTab = ({
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-20 bg-gray-100 animate-pulse rounded-lg" />
+            <div key={i} className="h-20 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
           ))}
         </div>
       ) : members.length === 0 ? (
@@ -608,10 +611,10 @@ const TeamTab = ({
             <div key={m.id} className="card p-4 flex items-center gap-3 group">
               <Avatar name={m.name} src={m.avatar} size="md" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-800 truncate">{m.name}</p>
-                <p className="text-xs text-gray-400 capitalize">{m.role_in_project}</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{m.name}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 capitalize">{m.role_in_project}</p>
                 {m.department && (
-                  <p className="text-[10px] text-gray-300">{m.department}</p>
+                  <p className="text-[10px] text-gray-300 dark:text-gray-600">{m.department}</p>
                 )}
               </div>
               {canManage && (
@@ -660,13 +663,13 @@ const BudgetTab = ({ projectId }: { projectId: string }) => {
       {/* Summary card */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total Budget', value: budget > 0 ? fmtCurrency(budget) : '—', color: 'text-gray-900' },
+          { label: 'Total Budget', value: budget > 0 ? fmtCurrency(budget) : '—', color: 'text-gray-900 dark:text-white' },
           { label: 'Spent',        value: spent  > 0 ? fmtCurrency(spent)  : '—', color: 'text-red-600' },
           { label: 'Remaining',    value: budget > 0 ? fmtCurrency(remaining) : '—',
             color: remaining < 0 ? 'text-red-600' : 'text-green-600' },
         ].map(({ label, value, color }) => (
           <div key={label} className="card p-4 text-center">
-            <p className="text-xs text-gray-500 mb-1">{label}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
             <p className={`text-lg font-bold ${color}`}>{value}</p>
           </div>
         ))}
@@ -676,7 +679,7 @@ const BudgetTab = ({ projectId }: { projectId: string }) => {
       {budget > 0 && (
         <div className="card p-5">
           <div className="flex items-center justify-between mb-2 text-sm">
-            <span className="text-gray-600">Budget utilisation</span>
+            <span className="text-gray-600 dark:text-gray-300">Budget utilisation</span>
             <span className={cn(
               'font-semibold',
               pct > 90 ? 'text-red-600' : pct > 70 ? 'text-amber-600' : 'text-green-600',
@@ -684,7 +687,7 @@ const BudgetTab = ({ projectId }: { projectId: string }) => {
               {pct.toFixed(1)}%
             </span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-3">
+          <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3">
             <div
               className={cn(
                 'h-3 rounded-full transition-all',
@@ -698,8 +701,8 @@ const BudgetTab = ({ projectId }: { projectId: string }) => {
 
       {/* Expenses table */}
       <div className="card overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h4 className="text-sm font-semibold text-gray-700">Expenses</h4>
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Expenses</h4>
         </div>
         {expenses.length === 0 ? (
           <EmptyState
@@ -710,27 +713,27 @@ const BudgetTab = ({ projectId }: { projectId: string }) => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
                   {['Date', 'Description', 'Category', 'Amount', 'Submitted By', 'Status'].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">
+                    <th key={h} className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {expenses.map((e) => (
-                  <tr key={e.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                  <tr key={e.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">
                       {formatDate(e.date, 'MMM d, yyyy')}
                     </td>
-                    <td className="px-4 py-3 text-gray-800">{e.description}</td>
-                    <td className="px-4 py-3 text-gray-500 capitalize">{e.category}</td>
-                    <td className="px-4 py-3 font-medium text-gray-800">
+                    <td className="px-4 py-3 text-gray-800 dark:text-gray-100">{e.description}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 capitalize">{e.category}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
                       {fmtCurrency(e.amount)}
                     </td>
-                    <td className="px-4 py-3 text-gray-500">{e.submitted_by}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{e.submitted_by}</td>
                     <td className="px-4 py-3">
                       <Badge
                         label={e.status}
@@ -772,10 +775,8 @@ const ProjectDetailPage = () => {
     enabled: !!id,
   })
 
-  const isProjectLead = members.some(
-    (m) => m.user_id === user?.id && m.role_in_project === 'lead',
-  )
-  const canManage = isAdmin || isManager || isProjectLead
+  const myProjectRole = members.find((m) => m.user_id === user?.id)?.role_in_project
+  const canManage = isAdmin || isManager || myProjectRole === 'owner' || myProjectRole === 'manager'
 
   const { mutate: archive } = useMutation({
     mutationFn: () => projectService.archive(id!),
@@ -791,8 +792,8 @@ const ProjectDetailPage = () => {
   if (isLoading) {
     return (
       <div className="space-y-5">
-        <div className="h-32 bg-gray-100 animate-pulse rounded-2xl" />
-        <div className="h-64 bg-gray-100 animate-pulse rounded-2xl" />
+        <div className="h-32 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-2xl" />
+        <div className="h-64 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-2xl" />
       </div>
     )
   }
@@ -818,23 +819,23 @@ const ProjectDetailPage = () => {
           <div className="flex items-start gap-3">
             <button
               onClick={() => navigate(ROUTES.PROJECTS)}
-              className="mt-0.5 p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+              className="mt-0.5 p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <ArrowLeft size={16} />
             </button>
             <div>
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <h1 className="text-xl font-bold text-gray-900">{project.name}</h1>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">{project.name}</h1>
                 <Badge
                   label={project.status.replace(/_/g, ' ')}
-                  className={STATUS_COLORS[project.status] ?? 'bg-gray-100 text-gray-600'}
+                  className={STATUS_COLORS[project.status] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}
                 />
                 {project.priority && (
-                  <span className="text-xs text-gray-400 capitalize">• {project.priority} priority</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 capitalize">• {project.priority} priority</span>
                 )}
               </div>
               {project.client_name && (
-                <p className="text-sm text-gray-500">Client: {project.client_name}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Client: {project.client_name}</p>
               )}
             </div>
           </div>
@@ -863,10 +864,10 @@ const ProjectDetailPage = () => {
         {/* Progress bar */}
         <div className="mt-4">
           <div className="flex items-center justify-between mb-1.5 text-xs">
-            <span className="text-gray-500">Overall progress</span>
-            <span className="font-semibold text-gray-700">{progress}%</span>
+            <span className="text-gray-500 dark:text-gray-400">Overall progress</span>
+            <span className="font-semibold text-gray-700 dark:text-gray-200">{progress}%</span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-2">
+          <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2">
             <div
               className={cn(
                 'h-2 rounded-full transition-all',
@@ -878,7 +879,7 @@ const ProjectDetailPage = () => {
         </div>
 
         {/* Meta row */}
-        <div className="flex items-center gap-4 mt-4 text-xs text-gray-500 flex-wrap">
+        <div className="flex items-center gap-4 mt-4 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
           {project.manager_name && (
             <div className="flex items-center gap-1.5">
               <Avatar name={project.manager_name} size="xs" />
@@ -895,7 +896,7 @@ const ProjectDetailPage = () => {
       </div>
 
       {/* ── Tabs ────────────────────────────────────────────── */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="flex gap-1 px-1">
           {TABS.map((tab) => (
             <button
@@ -905,7 +906,7 @@ const ProjectDetailPage = () => {
                 'flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
                 activeTab === tab.id
                   ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600',
               )}
             >
               {tab.icon}

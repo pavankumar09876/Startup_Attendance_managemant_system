@@ -30,11 +30,11 @@ const getGreeting = () => {
 // ── Error card ────────────────────────────────────────────────────────────────
 const DashboardError = ({ onRetry }: { onRetry: () => void }) => (
   <div className="flex flex-col items-center justify-center py-24 text-center">
-    <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">
+    <div className="w-14 h-14 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4">
       <span className="text-red-500 text-2xl font-bold">!</span>
     </div>
-    <p className="text-gray-700 font-medium mb-1">Failed to load dashboard</p>
-    <p className="text-sm text-gray-400 mb-4">Something went wrong while fetching your data.</p>
+    <p className="text-gray-700 dark:text-gray-200 font-medium mb-1">Failed to load dashboard</p>
+    <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">Something went wrong while fetching your data.</p>
     <button onClick={onRetry} className="text-sm text-blue-600 hover:underline">
       Try again
     </button>
@@ -100,10 +100,10 @@ const DashboardPage = () => {
     <div>
       {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
           {getGreeting()}, {firstName} 👋
         </h1>
-        <p className="text-sm text-gray-500 mt-0.5">{today}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{today}</p>
       </div>
 
       {/* Role-based dashboard */}

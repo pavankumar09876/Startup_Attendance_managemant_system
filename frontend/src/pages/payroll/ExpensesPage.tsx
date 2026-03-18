@@ -99,12 +99,12 @@ const ExpensesPage = () => {
       <div className="space-y-5">
         {/* Tabs + actions */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
             <button
               onClick={() => setTab('mine')}
               className={cn(
                 'flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
-                tab === 'mine' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+                tab === 'mine' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
               )}
             >
               My Expenses
@@ -119,7 +119,7 @@ const ExpensesPage = () => {
                 onClick={() => setTab('queue')}
                 className={cn(
                   'flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
-                  tab === 'queue' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+                  tab === 'queue' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
                 )}
               >
                 Approval Queue
@@ -141,7 +141,7 @@ const ExpensesPage = () => {
           {isLoading ? (
             <div className="p-5 space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-12 bg-gray-100 animate-pulse rounded-lg" />
+                <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
               ))}
             </div>
           ) : rows.length === 0 ? (
@@ -157,28 +157,28 @@ const ExpensesPage = () => {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
                     {(tab === 'queue'
                       ? ['Employee', 'Title', 'Category', 'Amount', 'Project', 'Submitted', 'Receipt', 'Actions']
                       : ['Title', 'Category', 'Amount', 'Project', 'Date', 'Status', 'Receipt', 'Actions']
                     ).map((h) => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {rows.map((exp) => (
-                    <tr key={exp.id} className="hover:bg-gray-50 transition-colors group">
+                    <tr key={exp.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
                       {tab === 'queue' && (
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <Avatar name={exp.user_name} src={exp.user_avatar} size="xs" />
-                            <span className="text-sm font-medium text-gray-800">{exp.user_name}</span>
+                            <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{exp.user_name}</span>
                           </div>
                         </td>
                       )}
-                      <td className="px-4 py-3 font-medium text-gray-800">{exp.title}</td>
+                      <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{exp.title}</td>
                       <td className="px-4 py-3">
                         <span className={cn(
                           'text-xs font-medium px-2 py-0.5 rounded-full capitalize',
@@ -187,13 +187,13 @@ const ExpensesPage = () => {
                           {exp.category}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-gray-900">{fmtINR(exp.amount)}</td>
-                      <td className="px-4 py-3 text-gray-500">
+                      <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{fmtINR(exp.amount)}</td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                         {exp.project_name
                           ? <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{exp.project_name}</span>
                           : '—'}
                       </td>
-                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                         {formatDate(tab === 'queue' ? exp.created_at : exp.date)}
                       </td>
                       {tab === 'mine' && (
@@ -213,7 +213,7 @@ const ExpensesPage = () => {
                             View
                           </a>
                         ) : (
-                          <span className="text-gray-400 text-xs">—</span>
+                          <span className="text-gray-400 dark:text-gray-500 text-xs">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -239,7 +239,7 @@ const ExpensesPage = () => {
                                 </button>
                                 <button
                                   onClick={() => setRejectId(null)}
-                                  className="text-xs text-gray-500 hover:text-gray-700"
+                                  className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                                 >
                                   No
                                 </button>
@@ -256,8 +256,8 @@ const ExpensesPage = () => {
                                 </button>
                                 <button
                                   onClick={() => setRejectId(exp.id)}
-                                  className="flex items-center gap-1 px-2 py-1 text-xs bg-red-50 text-red-600
-                                    rounded-lg hover:bg-red-100 transition-colors"
+                                  className="flex items-center gap-1 px-2 py-1 text-xs bg-red-50 dark:bg-red-900/20 text-red-600
+                                    rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                                 >
                                   <X size={11} />
                                   Reject

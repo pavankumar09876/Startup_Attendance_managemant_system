@@ -11,11 +11,15 @@ from app.database import Base
 class NotificationType(str, enum.Enum):
     LEAVE_APPROVED     = "leave_approved"
     LEAVE_REJECTED     = "leave_rejected"
+    LEAVE_REQUESTED    = "leave_requested"
     TASK_ASSIGNED      = "task_assigned"
     PAYSLIP_READY      = "payslip_ready"
     ATTENDANCE_REGULARIZED = "attendance_regularized"
     PROJECT_DEADLINE   = "project_deadline"
     EXPENSE_REVIEWED   = "expense_reviewed"
+    EXPENSE_SUBMITTED  = "expense_submitted"
+    CHECKIN_REMINDER   = "checkin_reminder"
+    CHECKOUT_REMINDER  = "checkout_reminder"
     GENERAL            = "general"
 
 
@@ -29,6 +33,14 @@ class Notification(Base):
     message     = Column(Text, nullable=False)
     link        = Column(String(500), nullable=True)   # front-end route to navigate
     is_read     = Column(Boolean, default=False)
+    # Enhanced notification fields
+    category           = Column(String(50), default="general")  # leave, attendance, task, payroll, expense, system
+    action_type        = Column(String(50), nullable=True)      # approve_reject, view, acknowledge
+    action_entity_type = Column(String(50), nullable=True)      # leave, expense, task, attendance
+    action_entity_id   = Column(UUID(as_uuid=True), nullable=True)
+    is_actioned        = Column(Boolean, default=False)
+    priority           = Column(String(10), default="normal")   # low, normal, high, urgent
+    expires_at         = Column(DateTime(timezone=True), nullable=True)
     created_at  = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User")

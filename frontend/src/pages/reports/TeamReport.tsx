@@ -92,11 +92,11 @@ const TeamReport = () => {
       <div className="card p-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Month</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Month</label>
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {MONTHS.map((m, i) => (
                 <option key={m} value={i + 1}>{m}</option>
@@ -104,11 +104,11 @@ const TeamReport = () => {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Year</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Year</label>
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {years.map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -116,11 +116,11 @@ const TeamReport = () => {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Employee (for allocation)</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Employee (for allocation)</label>
             <select
               value={empId}
               onChange={(e) => setEmpId(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[200px]"
+              className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[200px]"
             >
               <option value="">All Employees</option>
               {employees.map((e: any) => (
@@ -141,7 +141,7 @@ const TeamReport = () => {
       {isLoading ? (
         <div className="grid grid-cols-2 gap-5">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="card h-72 animate-pulse bg-gray-50" />
+            <div key={i} className="card h-72 animate-pulse bg-gray-50 dark:bg-gray-800" />
           ))}
         </div>
       ) : (
@@ -150,7 +150,7 @@ const TeamReport = () => {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
             {/* Utilization bar chart */}
             <div className="card p-5 xl:col-span-2">
-              <p className="text-sm font-semibold text-gray-800 mb-4">Team Utilization — Hours Logged vs Expected</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">Team Utilization — Hours Logged vs Expected</p>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart
                   data={data?.utilization ?? []}
@@ -177,12 +177,12 @@ const TeamReport = () => {
 
             {/* Project allocation pie */}
             <div className="card p-5">
-              <p className="text-sm font-semibold text-gray-800 mb-1">Project Allocation</p>
-              <p className="text-xs text-gray-400 mb-3">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">Project Allocation</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
                 {empId ? employees.find((e: any) => e.id === empId)?.first_name ?? 'Selected employee' : 'All employees'}
               </p>
               {(data?.allocation?.length ?? 0) === 0 ? (
-                <div className="h-[180px] flex items-center justify-center text-sm text-gray-400">No data</div>
+                <div className="h-[180px] flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">No data</div>
               ) : (
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
@@ -217,7 +217,7 @@ const TeamReport = () => {
 
           {/* Productivity trend */}
           <div className="card p-5">
-            <p className="text-sm font-semibold text-gray-800 mb-4">Weekly Productivity — Tasks Completed</p>
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">Weekly Productivity — Tasks Completed</p>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={data?.productivity_trend ?? []} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -239,40 +239,40 @@ const TeamReport = () => {
 
           {/* ── Utilization table ──────────────────────────────── */}
           <div className="card overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <p className="text-sm font-semibold text-gray-800">Team Utilization Detail</p>
-              <p className="text-xs text-gray-400 mt-0.5">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Team Utilization Detail</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                 {MONTHS[month - 1]} {year} · {data?.utilization?.length ?? 0} members
               </p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
                     {['Employee', 'Department', 'Hours This Month', 'Utilization', 'Projects', 'Tasks Done', 'Avg Daily Hrs'].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {(data?.utilization ?? []).length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center py-8 text-sm text-gray-400">
+                      <td colSpan={7} className="text-center py-8 text-sm text-gray-400 dark:text-gray-500">
                         No utilization data for this period.
                       </td>
                     </tr>
                   ) : (
                     (data?.utilization ?? []).map((row) => (
-                      <tr key={row.employee_id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-gray-800">{row.employee_name}</td>
-                        <td className="px-4 py-3 text-gray-500">{row.department}</td>
+                      <tr key={row.employee_id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{row.employee_name}</td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{row.department}</td>
                         <td className="px-4 py-3">
-                          <span className="font-semibold text-gray-900">{row.hours_logged}h</span>
-                          <span className="text-gray-400 text-xs"> / {row.expected_hours}h</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{row.hours_logged}h</span>
+                          <span className="text-gray-400 dark:text-gray-500 text-xs"> / {row.expected_hours}h</span>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-16 bg-gray-100 rounded-full h-1.5">
+                            <div className="w-16 bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
                               <div
                                 className={cn('h-1.5 rounded-full', utilizationBar(row.utilization_pct))}
                                 style={{ width: `${Math.min(row.utilization_pct, 100)}%` }}
@@ -283,9 +283,9 @@ const TeamReport = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-gray-700">{row.projects_count}</td>
-                        <td className="px-4 py-3 text-gray-700">{row.tasks_done}</td>
-                        <td className="px-4 py-3 text-gray-700">{row.avg_daily_hours.toFixed(1)}h</td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{row.projects_count}</td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{row.tasks_done}</td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{row.avg_daily_hours.toFixed(1)}h</td>
                       </tr>
                     ))
                   )}

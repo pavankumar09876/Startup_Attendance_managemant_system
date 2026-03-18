@@ -5,6 +5,10 @@ import {
   Clock, CalendarOff, CheckSquare, Timer,
   LogIn, LogOut, Calendar, AlertCircle,
 } from 'lucide-react'
+import {
+  ResponsiveContainer, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from 'recharts'
 
 import type { EmployeeStats } from '@/services/dashboard.service'
 import { attendanceService } from '@/services/attendance.service'
@@ -17,8 +21,8 @@ import StatCard from './StatCard'
 
 const SectionTitle = ({ title, subtitle }: { title: string; subtitle?: string }) => (
   <div className="mb-4">
-    <h3 className="text-[15px] font-semibold text-gray-900">{title}</h3>
-    {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+    <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white">{title}</h3>
+    {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>}
   </div>
 )
 
@@ -102,12 +106,30 @@ const EmployeeDashboard = ({ data }: Props) => {
         />
       </div>
 
+      {/* ── Leave Balance Chart ─────────────────────────────────── */}
+      {data.leave_consumption && data.leave_consumption.length > 0 && (
+        <div className="card p-5">
+          <SectionTitle title="Leave Balance" subtitle="Used vs available days by type" />
+          <ResponsiveContainer width="100%" height={Math.max(160, data.leave_consumption.length * 50)}>
+            <BarChart layout="vertical" data={data.leave_consumption} margin={{ top: 4, right: 30, bottom: 0, left: 60 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} />
+              <YAxis type="category" dataKey="type" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} width={56} />
+              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 12 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Bar dataKey="used"  fill="#DC2626" radius={[0,4,4,0]} name="Used" />
+              <Bar dataKey="total" fill="#BFDBFE" radius={[0,4,4,0]} name="Total" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
       {/* ── Today's status card + panels ───────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
 
         {/* Check-in card */}
         <div className={`card p-6 flex flex-col items-center justify-center text-center gap-4
-          ${!localStatus.checked_in ? 'border-green-200 bg-green-50/50' : 'border-blue-200 bg-blue-50/50'}`}
+          ${!localStatus.checked_in ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/20' : 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/20'}`}
         >
           {!localStatus.checked_in ? (
             <>
@@ -115,8 +137,8 @@ const EmployeeDashboard = ({ data }: Props) => {
                 <LogIn size={28} className="text-green-600" />
               </div>
               <div>
-                <p className="text-[15px] font-semibold text-gray-900 mb-1">Good to go?</p>
-                <p className="text-sm text-gray-500">You haven't checked in yet today.</p>
+                <p className="text-[15px] font-semibold text-gray-900 dark:text-white mb-1">Good to go?</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">You haven't checked in yet today.</p>
               </div>
               <Button
                 variant="primary"
@@ -133,11 +155,11 @@ const EmployeeDashboard = ({ data }: Props) => {
                 <LogOut size={28} className="text-blue-600" />
               </div>
               <div>
-                <p className="text-[15px] font-semibold text-gray-900 mb-1">You're checked in</p>
+                <p className="text-[15px] font-semibold text-gray-900 dark:text-white mb-1">You're checked in</p>
                 {localStatus.check_in_time && (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Since{' '}
-                    <span className="font-medium text-gray-800">
+                    <span className="font-medium text-gray-800 dark:text-gray-200">
                       {formatTime(new Date(`2000-01-01T${localStatus.check_in_time}`))}
                     </span>
                   </p>
@@ -164,12 +186,12 @@ const EmployeeDashboard = ({ data }: Props) => {
           {data.my_tasks.length === 0 ? (
             <EmptyState title="No tasks" description="You have no tasks assigned." />
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {data.my_tasks.slice(0, 5).map((task) => (
                 <div key={task.id} className="flex items-start gap-3 py-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{task.title}</p>
-                    <p className="text-xs text-gray-400 truncate mt-0.5">{task.project}</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{task.title}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{task.project}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <Badge
@@ -200,11 +222,11 @@ const EmployeeDashboard = ({ data }: Props) => {
             {data.my_leaves.length === 0 ? (
               <EmptyState title="No requests" description="You have no recent leave requests." />
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-gray-700">
                 {data.my_leaves.map((leave) => (
                   <div key={leave.id} className="flex items-center gap-3 py-2.5">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 capitalize">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-100 capitalize">
                         {leave.leave_type.replace(/_/g, ' ')}
                       </p>
                       <p className="text-xs text-gray-400">
@@ -231,9 +253,9 @@ const EmployeeDashboard = ({ data }: Props) => {
                     <Calendar size={14} className="text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Next Holiday</p>
-                    <p className="text-sm font-medium text-gray-800">{data.next_holiday.name}</p>
-                    <p className="text-xs text-gray-400">{formatDate(data.next_holiday.date)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Next Holiday</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{data.next_holiday.name}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(data.next_holiday.date)}</p>
                   </div>
                 </div>
               )}
@@ -243,18 +265,18 @@ const EmployeeDashboard = ({ data }: Props) => {
                     <AlertCircle size={14} className="text-red-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Next Deadline</p>
-                    <p className="text-sm font-medium text-gray-800 truncate max-w-[160px]">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Next Deadline</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate max-w-[160px]">
                       {data.next_deadline.title}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                       {data.next_deadline.project} · {formatDate(data.next_deadline.due_date)}
                     </p>
                   </div>
                 </div>
               )}
               {!data.next_holiday && !data.next_deadline && (
-                <p className="text-sm text-gray-400">Nothing upcoming.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">Nothing upcoming.</p>
               )}
             </div>
           </div>

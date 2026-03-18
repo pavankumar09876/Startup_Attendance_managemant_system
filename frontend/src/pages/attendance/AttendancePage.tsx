@@ -11,12 +11,17 @@ type Tab = 'my' | 'team'
 const AttendancePage = () => {
   const { user, hasRole } = useAuth()
   const canViewTeam = hasRole(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.HR, ROLES.MANAGER)
+  // Super Admin & Admin don't need personal attendance — they only manage
+  const isAdminRole = hasRole(ROLES.SUPER_ADMIN, ROLES.ADMIN)
 
-  // Default to 'team' for admins/managers, 'my' for employees
+  // Admin roles go straight to team view; employees see only their own
   const [activeTab, setActiveTab] = useState<Tab>(canViewTeam ? 'team' : 'my')
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'my',   label: 'My Attendance', icon: <Clock size={15} /> },
+    // Hide "My Attendance" for super_admin / admin — they don't clock in
+    ...(!isAdminRole
+      ? [{ id: 'my' as Tab, label: 'My Attendance', icon: <Clock size={15} /> }]
+      : []),
     ...(canViewTeam
       ? [{ id: 'team' as Tab, label: 'Team Attendance', icon: <Users size={15} /> }]
       : []),
@@ -26,7 +31,7 @@ const AttendancePage = () => {
     <div>
       {/* Tab switcher */}
       {tabs.length > 1 && (
-        <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
+        <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -34,8 +39,8 @@ const AttendancePage = () => {
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
                 activeTab === tab.id
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700',
+                  ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
               )}
             >
               {tab.icon}
@@ -46,7 +51,7 @@ const AttendancePage = () => {
       )}
 
       {/* Content */}
-      {activeTab === 'my'   && <MyAttendance />}
+      {activeTab === 'my'   && !isAdminRole && <MyAttendance />}
       {activeTab === 'team' && <TeamAttendance />}
     </div>
   )

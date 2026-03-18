@@ -11,6 +11,7 @@ import { reportsService } from '@/services/reports.service'
 import type { ProjectProgressRow } from '@/services/reports.service'
 import { projectService } from '@/services/project.service'
 import Button from '@/components/common/Button'
+import DatePicker from '@/components/common/DatePicker'
 import { cn } from '@/utils/cn'
 
 const COLORS = ['#2563EB', '#16A34A', '#D97706', '#DC2626', '#7C3AED', '#0891B2']
@@ -36,13 +37,13 @@ const fmtINR = (n: number) =>
 // ── Custom horizontal bar for project progress ────────────────────────────────
 const ProgressBar = ({ value, status }: { value: number; status: string }) => (
   <div className="flex items-center gap-2 min-w-[120px]">
-    <div className="flex-1 bg-gray-100 rounded-full h-2">
+    <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full h-2">
       <div
         className="h-2 rounded-full transition-all"
         style={{ width: `${Math.min(value, 100)}%`, backgroundColor: STATUS_COLORS[status] ?? COLORS[0] }}
       />
     </div>
-    <span className="text-xs font-semibold text-gray-700 w-9 text-right">{value}%</span>
+    <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 w-9 text-right">{value}%</span>
   </div>
 )
 
@@ -98,11 +99,11 @@ const ProjectReport = () => {
       <div className="card p-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Project</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Project</label>
             <select
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Projects</option>
               {projects.map((p: any) => (
@@ -111,11 +112,11 @@ const ProjectReport = () => {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Status</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Statuses</option>
               {['active', 'planning', 'in_progress', 'on_hold', 'completed', 'cancelled'].map((s) => (
@@ -124,22 +125,12 @@ const ProjectReport = () => {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">From</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">From</label>
+            <DatePicker value={startDate} onChange={setStartDate} max={endDate} placeholder="Start date" />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">To</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">To</label>
+            <DatePicker value={endDate} onChange={setEndDate} min={startDate} placeholder="End date" />
           </div>
           <div className="ml-auto mt-4">
             <Button variant="secondary" leftIcon={<Download size={14} />} onClick={handleExport}>
@@ -152,7 +143,7 @@ const ProjectReport = () => {
       {isLoading ? (
         <div className="grid grid-cols-2 gap-5">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="card h-72 animate-pulse bg-gray-50" />
+            <div key={i} className="card h-72 animate-pulse bg-gray-50 dark:bg-gray-800" />
           ))}
         </div>
       ) : (
@@ -161,7 +152,7 @@ const ProjectReport = () => {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
             {/* Budget overview */}
             <div className="card p-5">
-              <p className="text-sm font-semibold text-gray-800 mb-4">Budget Overview</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">Budget Overview</p>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={data?.budget_chart ?? []} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -180,7 +171,7 @@ const ProjectReport = () => {
 
             {/* Task completion trend */}
             <div className="card p-5">
-              <p className="text-sm font-semibold text-gray-800 mb-4">Task Completion Rate</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">Task Completion Rate</p>
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={data?.task_trend ?? []} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -205,23 +196,23 @@ const ProjectReport = () => {
 
           {/* ── Project health table ─────────────────────────────── */}
           <div className="card overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <p className="text-sm font-semibold text-gray-800">Project Health</p>
-              <p className="text-xs text-gray-400 mt-0.5">{data?.projects?.length ?? 0} projects</p>
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Project Health</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{data?.projects?.length ?? 0} projects</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
                     {['Project', 'Status', 'Progress', 'Tasks', 'Budget', 'Team', 'Health'].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {(data?.projects ?? []).length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center py-8 text-sm text-gray-400">
+                      <td colSpan={7} className="text-center py-8 text-sm text-gray-400 dark:text-gray-500">
                         No project data for selected filters.
                       </td>
                     </tr>
@@ -229,8 +220,8 @@ const ProjectReport = () => {
                     (data?.projects ?? []).map((proj) => {
                       const health = HEALTH_CONFIG[proj.health] ?? HEALTH_CONFIG.on_track
                       return (
-                        <tr key={proj.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-3 font-medium text-gray-800 max-w-[160px] truncate">
+                        <tr key={proj.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                          <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100 max-w-[160px] truncate">
                             {proj.name}
                           </td>
                           <td className="px-4 py-3">
@@ -247,16 +238,16 @@ const ProjectReport = () => {
                           <td className="px-4 py-3 min-w-[140px]">
                             <ProgressBar value={proj.progress} status={proj.status} />
                           </td>
-                          <td className="px-4 py-3 text-gray-600">
+                          <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                             {proj.tasks_done}/{proj.tasks_total}
                           </td>
                           <td className="px-4 py-3">
                             <div className="text-xs">
-                              <span className="text-gray-800 font-medium">{fmtINR(proj.spent)}</span>
-                              <span className="text-gray-400"> / {fmtINR(proj.budget)}</span>
+                              <span className="text-gray-800 dark:text-gray-100 font-medium">{fmtINR(proj.spent)}</span>
+                              <span className="text-gray-400 dark:text-gray-500"> / {fmtINR(proj.budget)}</span>
                             </div>
                             {proj.budget > 0 && (
-                              <div className="w-20 bg-gray-100 rounded-full h-1 mt-1">
+                              <div className="w-20 bg-gray-100 dark:bg-gray-800 rounded-full h-1 mt-1">
                                 <div
                                   className={cn(
                                     'h-1 rounded-full',
@@ -268,7 +259,7 @@ const ProjectReport = () => {
                               </div>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-gray-600">{proj.team_count}</td>
+                          <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{proj.team_count}</td>
                           <td className="px-4 py-3">
                             <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', health.cls)}>
                               {health.label}

@@ -22,8 +22,8 @@ const PIE_COLORS: Record<string, string> = {
 
 const SectionTitle = ({ title, subtitle }: { title: string; subtitle?: string }) => (
   <div className="mb-4">
-    <h3 className="text-[15px] font-semibold text-gray-900">{title}</h3>
-    {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+    <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white">{title}</h3>
+    {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>}
   </div>
 )
 
@@ -33,7 +33,7 @@ const ProgressBar = ({ value }: { value: number }) => (
     <div className="flex justify-between mb-0.5">
       <span className="text-xs text-gray-400">{value}%</span>
     </div>
-    <div className="w-full bg-gray-100 rounded-full h-1.5">
+    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
       <div
         className="h-1.5 rounded-full bg-blue-500 transition-all"
         style={{ width: `${value}%` }}
@@ -176,26 +176,26 @@ const ManagerDashboard = ({ data }: Props) => (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50">
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 rounded-l-lg">Task</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">Project</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500">Due</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 rounded-r-lg">Assignee</th>
+                <tr className="bg-gray-50 dark:bg-gray-800">
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400 rounded-l-lg">Task</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400">Project</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400">Due</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 dark:text-gray-400 rounded-r-lg">Assignee</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {data.at_risk_tasks.map((task) => (
-                  <tr key={task.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={task.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <td className="px-3 py-3">
-                      <p className="font-medium text-gray-800 truncate max-w-[160px]">{task.title}</p>
+                      <p className="font-medium text-gray-800 dark:text-gray-100 truncate max-w-[160px]">{task.title}</p>
                     </td>
-                    <td className="px-3 py-3 text-gray-500 truncate max-w-[100px]">{task.project}</td>
+                    <td className="px-3 py-3 text-gray-500 dark:text-gray-400 truncate max-w-[100px]">{task.project}</td>
                     <td className="px-3 py-3">
                       <span className="text-red-600 font-medium text-xs">
                         {formatDate(task.due_date, 'MMM d')}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-gray-500 truncate max-w-[100px]">{task.assignee}</td>
+                    <td className="px-3 py-3 text-gray-500 dark:text-gray-400 truncate max-w-[100px]">{task.assignee}</td>
                   </tr>
                 ))}
               </tbody>
@@ -210,11 +210,11 @@ const ManagerDashboard = ({ data }: Props) => (
         {data.project_progress.length === 0 ? (
           <EmptyState title="No projects" description="You have no active projects." />
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {data.project_progress.map((proj) => (
               <div key={proj.id} className="py-3">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-gray-800 truncate max-w-[180px]">{proj.name}</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate max-w-[180px]">{proj.name}</p>
                   <Badge
                     label={proj.status}
                     className={PROJECT_STATUS_COLORS[proj.status] ?? 'bg-gray-100 text-gray-600'}

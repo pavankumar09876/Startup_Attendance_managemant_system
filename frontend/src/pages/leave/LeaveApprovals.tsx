@@ -50,13 +50,13 @@ const RejectModal = ({
 
   return (
     <Modal open={!!leave} onClose={onClose} title="Reject Leave Request" size="sm">
-      <p className="text-sm text-gray-600 mb-4">
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
         Rejecting{' '}
-        <span className="font-medium text-gray-900">{leave.employee_name}'s</span>{' '}
+        <span className="font-medium text-gray-900 dark:text-white">{leave.employee_name}'s</span>{' '}
         <span className="capitalize">{leave.leave_type.replace(/_/g, ' ')}</span> leave.
       </p>
       <div className="mb-5">
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
           Reason for rejection
         </label>
         <textarea
@@ -64,8 +64,9 @@ const RejectModal = ({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Provide a reason so the employee knows why…"
-          className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm resize-none
-            focus:outline-none focus:ring-2 focus:ring-red-400 placeholder:text-gray-400"
+          className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm resize-none
+            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+            focus:outline-none focus:ring-2 focus:ring-red-400 placeholder:text-gray-400 dark:placeholder:text-gray-500"
         />
       </div>
       <div className="flex gap-3">
@@ -150,7 +151,7 @@ const LeaveApprovals = () => {
       {/* ── Filters row ─────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Status tabs */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -158,8 +159,8 @@ const LeaveApprovals = () => {
               className={cn(
                 'px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
                 activeTab === tab.id
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700',
+                  ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
               )}
             >
               {tab.label}
@@ -177,7 +178,8 @@ const LeaveApprovals = () => {
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-300 text-sm
+            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-white
               focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Departments</option>
@@ -208,12 +210,12 @@ const LeaveApprovals = () => {
         {isLoading ? (
           <div className="p-5 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-14 bg-gray-100 animate-pulse rounded-lg" />
+              <div key={i} className="h-14 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
             ))}
           </div>
         ) : leaves.length === 0 ? (
           <EmptyState
-            icon={<Users size={40} className="text-gray-300" />}
+            icon={<Users size={40} className="text-gray-300 dark:text-gray-600" />}
             title="No leave requests"
             description={activeTab === 'pending'
               ? "All caught up! No pending approvals."
@@ -222,12 +224,12 @@ const LeaveApprovals = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
                   {/* Bulk checkbox — only show when on pending tab */}
                   {activeTab !== 'rejected' && activeTab !== 'approved' && (
                     <th className="w-10 px-4 py-3">
-                      <button onClick={toggleAll} className="text-gray-400 hover:text-blue-600">
+                      <button onClick={toggleAll} className="text-gray-400 dark:text-gray-500 hover:text-blue-600">
                         {allPendingSelect
                           ? <CheckSquare size={16} className="text-blue-600" />
                           : <Square size={16} />}
@@ -236,20 +238,20 @@ const LeaveApprovals = () => {
                   )}
                   {['Employee', 'Department', 'Leave Type', 'From', 'To', 'Days', 'Reason', 'Applied', 'Status', 'Actions'].map(
                     (h) => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">
+                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">
                         {h}
                       </th>
                     ),
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {leaves.map((leave) => (
                   <tr
                     key={leave.id}
                     className={cn(
-                      'hover:bg-gray-50 transition-colors',
-                      selected.has(leave.id) && 'bg-blue-50',
+                      'hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
+                      selected.has(leave.id) && 'bg-blue-50 dark:bg-blue-900/20',
                     )}
                   >
                     {/* Checkbox */}
@@ -258,7 +260,7 @@ const LeaveApprovals = () => {
                         {leave.status === 'pending' && (
                           <button
                             onClick={() => toggleSelect(leave.id)}
-                            className="text-gray-400 hover:text-blue-600"
+                            className="text-gray-400 dark:text-gray-500 hover:text-blue-600"
                           >
                             {selected.has(leave.id)
                               ? <CheckSquare size={16} className="text-blue-600" />
@@ -272,25 +274,25 @@ const LeaveApprovals = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <Avatar name={leave.employee_name ?? '?'} src={leave.employee_avatar} size="sm" />
-                        <span className="font-medium text-gray-800 truncate max-w-[120px]">
+                        <span className="font-medium text-gray-800 dark:text-gray-100 truncate max-w-[120px]">
                           {leave.employee_name ?? '—'}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-500">{leave.department ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{leave.department ?? '—'}</td>
                     <td className="px-4 py-3">
-                      <span className="capitalize text-gray-700">
+                      <span className="capitalize text-gray-700 dark:text-gray-200">
                         {leave.leave_type.replace(/_/g, ' ')}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-200 whitespace-nowrap">
                       {formatDate(leave.start_date, 'MMM d, yyyy')}
                     </td>
-                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-200 whitespace-nowrap">
                       {formatDate(leave.end_date, 'MMM d, yyyy')}
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-800">{leave.total_days}d</td>
-                    <td className="px-4 py-3 text-gray-500 max-w-[160px]">
+                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{leave.total_days}d</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 max-w-[160px]">
                       <span className="truncate block">{leave.reason}</span>
                       {leave.rejection_reason && (
                         <span className="text-xs text-red-500 block mt-0.5">
@@ -298,13 +300,13 @@ const LeaveApprovals = () => {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       {timeAgo(leave.created_at)}
                     </td>
                     <td className="px-4 py-3">
                       <Badge
                         label={leave.status}
-                        className={LEAVE_STATUS_COLORS[leave.status] ?? 'bg-gray-100 text-gray-600'}
+                        className={LEAVE_STATUS_COLORS[leave.status] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}
                       />
                     </td>
                     <td className="px-4 py-3">

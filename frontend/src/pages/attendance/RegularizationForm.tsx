@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -9,6 +9,7 @@ import { CalendarDays, Clock } from 'lucide-react'
 import { attendanceService } from '@/services/attendance.service'
 import Modal from '@/components/common/Modal'
 import Button from '@/components/common/Button'
+import DatePicker from '@/components/common/DatePicker'
 
 const schema = z
   .object({
@@ -41,6 +42,7 @@ const RegularizationForm = ({ open, onClose, prefillDate }: Props) => {
     handleSubmit,
     reset,
     watch,
+    control,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -77,40 +79,31 @@ const RegularizationForm = ({ open, onClose, prefillDate }: Props) => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
             Date
           </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <CalendarDays size={15} />
-            </span>
-            <input
-              type="date"
-              max={today}
-              className={`w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                ${errors.date ? 'border-red-400' : 'border-gray-300'}`}
-              {...register('date')}
-            />
-          </div>
+          <Controller name="date" control={control} render={({ field }) => (
+            <DatePicker value={field.value ?? ''} onChange={field.onChange} max={today} error={!!errors.date} placeholder="Select date" />
+          )} />
           {errors.date && <p className="mt-1 text-xs text-red-500">{errors.date.message}</p>}
         </div>
 
         {/* Time pickers */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Check-in Time
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
                 <Clock size={15} />
               </span>
               <input
                 type="time"
                 className={`w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm
+                  bg-white dark:bg-gray-800 text-gray-900 dark:text-white
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                  ${errors.check_in ? 'border-red-400' : 'border-gray-300'}`}
+                  ${errors.check_in ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                 {...register('check_in')}
               />
             </div>
@@ -120,18 +113,19 @@ const RegularizationForm = ({ open, onClose, prefillDate }: Props) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Check-out Time
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
                 <Clock size={15} />
               </span>
               <input
                 type="time"
                 className={`w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm
+                  bg-white dark:bg-gray-800 text-gray-900 dark:text-white
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                  ${errors.check_out ? 'border-red-400' : 'border-gray-300'}`}
+                  ${errors.check_out ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                 {...register('check_out')}
               />
             </div>
@@ -144,8 +138,8 @@ const RegularizationForm = ({ open, onClose, prefillDate }: Props) => {
         {/* Reason */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-sm font-medium text-gray-700">Reason</label>
-            <span className={`text-xs ${reasonValue.length < 20 ? 'text-red-400' : 'text-gray-400'}`}>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Reason</label>
+            <span className={`text-xs ${reasonValue.length < 20 ? 'text-red-400' : 'text-gray-400 dark:text-gray-500'}`}>
               {reasonValue.length} / 20 min
             </span>
           </div>
@@ -153,9 +147,10 @@ const RegularizationForm = ({ open, onClose, prefillDate }: Props) => {
             rows={4}
             placeholder="Explain why you need this regularization (e.g. forgot to check out, system issue…)"
             className={`w-full px-3 py-2.5 rounded-lg border text-sm resize-none
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-white
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-              placeholder:text-gray-400
-              ${errors.reason ? 'border-red-400' : 'border-gray-300'}`}
+              placeholder:text-gray-400 dark:placeholder:text-gray-500
+              ${errors.reason ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
             {...register('reason')}
           />
           {errors.reason && (

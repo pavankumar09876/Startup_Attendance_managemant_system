@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { sprintService } from '@/services/sprint.service'
 import Modal from '@/components/common/Modal'
 import Button from '@/components/common/Button'
+import DatePicker from '@/components/common/DatePicker'
 
 interface Props {
   projectId: string
@@ -43,53 +44,43 @@ const CreateSprintModal = ({ projectId, onClose }: Props) => {
     <Modal open onClose={onClose} title="Create Sprint" size="sm">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Sprint Name *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Sprint Name *</label>
           <input
             value={form.name}
             onChange={(e) => set('name', e.target.value)}
             placeholder="e.g. Sprint 1"
-            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
+            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+              bg-white dark:bg-gray-900 text-gray-900 dark:text-white
               focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Sprint Goal</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Sprint Goal</label>
           <textarea
             rows={2}
             value={form.goal}
             onChange={(e) => set('goal', e.target.value)}
             placeholder="What do we want to achieve in this sprint?"
-            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm resize-none
-              focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm resize-none
+              bg-white dark:bg-gray-900 text-gray-900 dark:text-white
+              focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:placeholder-gray-500"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Date</label>
-            <input
-              type="date"
-              value={form.start_date}
-              onChange={(e) => set('start_date', e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Start Date</label>
+            <DatePicker value={form.start_date} onChange={(v) => set('start_date', v)} max={form.end_date} placeholder="Start date" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">End Date</label>
-            <input
-              type="date"
-              value={form.end_date}
-              onChange={(e) => set('end_date', e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">End Date</label>
+            <DatePicker value={form.end_date} onChange={(v) => set('end_date', v)} min={form.start_date} placeholder="End date" />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
             Story Point Capacity
           </label>
           <input
@@ -98,7 +89,8 @@ const CreateSprintModal = ({ projectId, onClose }: Props) => {
             value={form.capacity}
             onChange={(e) => set('capacity', e.target.value)}
             placeholder="e.g. 40"
-            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
+            className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+              bg-white dark:bg-gray-900 text-gray-900 dark:text-white
               focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>

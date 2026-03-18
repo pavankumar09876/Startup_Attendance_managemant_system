@@ -29,17 +29,17 @@ const STATUS_TABS: { id: ProjectStatus | 'all'; label: string }[] = [
 ]
 
 const STATUS_COLORS: Record<ProjectStatus, string> = {
-  planning:    'bg-gray-100 text-gray-600',
+  planning:    'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300',
   active:      'bg-blue-100 text-blue-700',
   in_progress: 'bg-blue-100 text-blue-700',
   on_hold:     'bg-amber-100 text-amber-700',
   completed:   'bg-green-100 text-green-700',
   cancelled:   'bg-red-100 text-red-700',
-  archived:    'bg-gray-100 text-gray-500',
+  archived:    'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
-  low:      'bg-gray-100 text-gray-500',
+  low:      'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
   medium:   'bg-blue-100 text-blue-600',
   high:     'bg-amber-100 text-amber-700',
   critical: 'bg-red-100 text-red-700',
@@ -82,34 +82,34 @@ const ProjectCard = ({
         {project.priority && (
           <span className={cn(
             'text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full',
-            PRIORITY_COLORS[project.priority] ?? 'bg-gray-100 text-gray-500',
+            PRIORITY_COLORS[project.priority] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
           )}>
             {project.priority}
           </span>
         )}
         <Badge
           label={project.status.replace(/_/g, ' ')}
-          className={STATUS_COLORS[project.status] ?? 'bg-gray-100 text-gray-600'}
+          className={STATUS_COLORS[project.status] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}
         />
       </div>
 
       {/* Name */}
-      <h3 className="text-[15px] font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-0.5 truncate">
+      <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors mb-0.5 truncate">
         {project.name}
       </h3>
 
       {/* Client */}
       {project.client_name && (
-        <p className="text-xs text-gray-400 mb-3 truncate">{project.client_name}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-3 truncate">{project.client_name}</p>
       )}
 
       {/* Progress bar */}
       <div className="mb-3">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-gray-500">Progress</span>
-          <span className="text-xs font-semibold text-gray-700">{progress}%</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">Progress</span>
+          <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">{progress}%</span>
         </div>
-        <div className="w-full bg-gray-100 rounded-full h-1.5">
+        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
           <div
             className={cn('h-1.5 rounded-full transition-all', progressColor(progress))}
             style={{ width: `${progress}%` }}
@@ -118,7 +118,7 @@ const ProjectCard = ({
       </div>
 
       {/* Stats row */}
-      <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3">
         <div className="flex items-center gap-1">
           <CheckSquare size={12} />
           <span>
@@ -144,15 +144,15 @@ const ProjectCard = ({
       {budgetPct !== null && (
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-400">Budget</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">Budget</span>
             <span className={cn(
               'text-xs font-medium',
-              budgetPct > 90 ? 'text-red-600' : 'text-gray-500',
+              budgetPct > 90 ? 'text-red-600' : 'text-gray-500 dark:text-gray-400',
             )}>
               {budgetPct.toFixed(0)}% used
             </span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-1">
+          <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1">
             <div
               className={cn(
                 'h-1 rounded-full',
@@ -165,15 +165,15 @@ const ProjectCard = ({
       )}
 
       {/* Footer: PM + deadline */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
         <div className="flex items-center gap-1.5">
           <Avatar name={project.manager_name ?? 'PM'} size="xs" />
-          <span className="text-xs text-gray-500 truncate max-w-[100px]">
+          <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[100px]">
             {project.manager_name ?? '—'}
           </span>
         </div>
         {project.end_date && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 dark:text-gray-500">
             {formatDate(project.end_date, 'MMM d, yyyy')}
           </span>
         )}
@@ -190,46 +190,46 @@ const ListRow = ({ project, onClick }: { project: Project; onClick: () => void }
   return (
     <tr
       onClick={onClick}
-      className="hover:bg-gray-50 cursor-pointer transition-colors"
+      className="hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
     >
       <td className="px-4 py-3">
         <div>
-          <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+          <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[200px]">
             {project.name}
           </p>
           {project.client_name && (
-            <p className="text-xs text-gray-400 truncate">{project.client_name}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{project.client_name}</p>
           )}
         </div>
       </td>
       <td className="px-4 py-3">
         <Badge
           label={project.status.replace(/_/g, ' ')}
-          className={STATUS_COLORS[project.status] ?? 'bg-gray-100 text-gray-600'}
+          className={STATUS_COLORS[project.status] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}
         />
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-1.5">
           <Avatar name={project.manager_name ?? 'PM'} size="xs" />
-          <span className="text-xs text-gray-600 truncate max-w-[100px]">
+          <span className="text-xs text-gray-600 dark:text-gray-300 truncate max-w-[100px]">
             {project.manager_name ?? '—'}
           </span>
         </div>
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2 min-w-[120px]">
-          <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+          <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
             <div
               className={cn('h-1.5 rounded-full', progressColor(progress))}
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="text-xs font-medium text-gray-600 w-8 text-right">
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300 w-8 text-right">
             {progress}%
           </span>
         </div>
       </td>
-      <td className="px-4 py-3 text-xs text-gray-500">
+      <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
         {project.budget != null
           ? `₹${project.budget.toLocaleString('en-IN')}`
           : '—'}
@@ -242,7 +242,7 @@ const ListRow = ({ project, onClick }: { project: Project; onClick: () => void }
               ? 'text-red-600 font-medium'
               : days !== null && days <= 7
                 ? 'text-amber-600'
-                : 'text-gray-500',
+                : 'text-gray-500 dark:text-gray-400',
           )}>
             {formatDate(project.end_date, 'MMM d, yyyy')}
             {days !== null && days < 0 && ' (overdue)'}
@@ -254,13 +254,13 @@ const ListRow = ({ project, onClick }: { project: Project; onClick: () => void }
           {Array.from({ length: Math.min(project.member_count ?? 0, 4) }).map((_, i) => (
             <div
               key={i}
-              className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[9px] text-gray-500"
+              className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-white dark:border-gray-900 flex items-center justify-center text-[9px] text-gray-500 dark:text-gray-400"
             >
               {String.fromCharCode(65 + i)}
             </div>
           ))}
           {(project.member_count ?? 0) > 4 && (
-            <div className="w-6 h-6 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[9px] text-gray-500">
+            <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-gray-900 flex items-center justify-center text-[9px] text-gray-500 dark:text-gray-400">
               +{(project.member_count ?? 0) - 4}
             </div>
           )}
@@ -274,16 +274,16 @@ const ListRow = ({ project, onClick }: { project: Project; onClick: () => void }
 const CardSkeleton = () => (
   <div className="card p-5 space-y-3 animate-pulse">
     <div className="flex justify-between">
-      <div className="h-4 bg-gray-200 rounded w-16" />
-      <div className="h-4 bg-gray-200 rounded w-20" />
+      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16" />
+      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20" />
     </div>
-    <div className="h-5 bg-gray-200 rounded w-3/4" />
-    <div className="h-3 bg-gray-200 rounded w-1/2" />
-    <div className="h-2 bg-gray-200 rounded w-full" />
+    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-full" />
     <div className="flex gap-4">
-      <div className="h-3 bg-gray-200 rounded w-12" />
-      <div className="h-3 bg-gray-200 rounded w-12" />
-      <div className="h-3 bg-gray-200 rounded w-16" />
+      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12" />
+      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12" />
+      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16" />
     </div>
   </div>
 )
@@ -319,7 +319,7 @@ const ProjectsPage = () => {
       {/* ── Top bar ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Status tabs */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl overflow-x-auto">
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl overflow-x-auto">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -327,8 +327,8 @@ const ProjectsPage = () => {
               className={cn(
                 'px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap',
                 statusFilter === tab.id
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700',
+                  ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
               )}
             >
               {tab.label}
@@ -339,24 +339,25 @@ const ProjectsPage = () => {
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search projects…"
-              className="pl-8 pr-3 py-2 rounded-lg border border-gray-300 text-sm
+              className="pl-8 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                 focus:outline-none focus:ring-2 focus:ring-blue-500 w-52"
             />
           </div>
 
           {/* View toggle */}
-          <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+          <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <button
               onClick={() => setViewMode('grid')}
               className={cn(
                 'px-3 py-2 transition-colors',
-                viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50',
+                viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800',
               )}
             >
               <LayoutGrid size={15} />
@@ -365,7 +366,7 @@ const ProjectsPage = () => {
               onClick={() => setViewMode('list')}
               className={cn(
                 'px-3 py-2 transition-colors',
-                viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50',
+                viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800',
               )}
             >
               <List size={15} />
@@ -394,7 +395,7 @@ const ProjectsPage = () => {
         ) : (
           <div className="card overflow-hidden p-5 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-12 bg-gray-100 animate-pulse rounded-lg" />
+              <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
             ))}
           </div>
         )
@@ -436,13 +437,13 @@ const ProjectsPage = () => {
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
                   {['Project', 'Status', 'Manager', 'Progress', 'Budget', 'Deadline', 'Team'].map(
                     (h) => (
                       <th
                         key={h}
-                        className="text-left px-4 py-3 text-xs font-medium text-gray-500"
+                        className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400"
                       >
                         {h}
                       </th>
@@ -450,7 +451,7 @@ const ProjectsPage = () => {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {projects.map((p) => (
                   <ListRow
                     key={p.id}
@@ -466,7 +467,7 @@ const ProjectsPage = () => {
 
       {/* ── Archived note ────────────────────────────────────── */}
       {statusFilter === 'all' && projects.length > 0 && (
-        <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">
+        <p className="text-xs text-gray-400 dark:text-gray-500 text-center flex items-center justify-center gap-1">
           <Archive size={11} />
           Archived projects are hidden. Use the status filter to view them.
         </p>

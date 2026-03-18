@@ -26,14 +26,14 @@ const TasksPage = () => {
     <div className="space-y-4">
       {/* ── Tab toggle ───────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
           <button
             onClick={() => setActiveTab('my-tasks')}
             className={cn(
               'flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
               activeTab === 'my-tasks'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700',
+                ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
             )}
           >
             <List size={14} />
@@ -44,8 +44,8 @@ const TasksPage = () => {
             className={cn(
               'flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
               activeTab === 'kanban'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700',
+                ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
             )}
           >
             <LayoutGrid size={14} />
@@ -58,7 +58,8 @@ const TasksPage = () => {
           <select
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-300 text-sm
+            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+              bg-white dark:bg-gray-900 text-gray-900 dark:text-white
               focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Select a project…</option>
@@ -76,9 +77,9 @@ const TasksPage = () => {
         <KanbanBoard projectId={projectId} />
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <LayoutGrid size={40} className="text-gray-200 mb-3" />
-          <p className="text-gray-500 text-sm font-medium">Select a project above</p>
-          <p className="text-gray-400 text-xs mt-1">to view its Kanban board</p>
+          <LayoutGrid size={40} className="text-gray-200 dark:text-gray-700 mb-3" />
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Select a project above</p>
+          <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">to view its Kanban board</p>
         </div>
       )}
     </div>

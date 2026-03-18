@@ -17,7 +17,7 @@ const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void 
     className={cn(
       'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent',
       'transition-colors duration-200 focus:outline-none',
-      checked ? 'bg-blue-600' : 'bg-gray-200',
+      checked ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700',
     )}
   >
     <span
@@ -47,23 +47,23 @@ const NotifRow = ({
   onToggle: (key: keyof NotificationPreferences) => void
   showEmail?: boolean
 }) => (
-  <div className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0 gap-4">
+  <div className="flex items-center justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-0 gap-4">
     <div className="flex-1">
-      <p className="text-sm font-medium text-gray-800">{label}</p>
-      {description && <p className="text-xs text-gray-400 mt-0.5">{description}</p>}
+      <p className="text-sm font-medium text-gray-800 dark:text-white">{label}</p>
+      {description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{description}</p>}
     </div>
     <div className="flex items-center gap-5 shrink-0">
       {showEmail && emailKey && (
         <div className="flex items-center gap-2">
           <Mail size={13} className="text-gray-400" />
-          <span className="text-xs text-gray-500 w-10">Email</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 w-10">Email</span>
           <Toggle checked={prefs[emailKey] as boolean} onChange={() => onToggle(emailKey)} />
         </div>
       )}
       {inappKey && (
         <div className="flex items-center gap-2">
           <Bell size={13} className="text-gray-400" />
-          <span className="text-xs text-gray-500 w-12">In-App</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 w-12">In-App</span>
           <Toggle checked={prefs[inappKey] as boolean} onChange={() => onToggle(inappKey)} />
         </div>
       )}
@@ -81,6 +81,8 @@ const defaultPrefs = (): NotificationPreferences => ({
   payslip_ready_email:                  true,
   payslip_ready_inapp:                  true,
   attendance_regularization_inapp:      true,
+  checkin_reminder_inapp:               true,
+  checkout_reminder_inapp:              true,
   project_deadline_email:               true,
   project_deadline_inapp:               true,
   birthday_reminder_inapp:              false,
@@ -117,7 +119,7 @@ const NotificationSettings = () => {
     return (
       <div className="space-y-3 max-w-2xl">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-14 bg-gray-100 rounded-lg animate-pulse" />
+          <div key={i} className="h-14 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />
         ))}
       </div>
     )
@@ -126,15 +128,15 @@ const NotificationSettings = () => {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h3 className="text-sm font-semibold text-gray-800">Notification Preferences</h3>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-white">Notification Preferences</h3>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
           Choose how and when you want to be notified. Changes apply to your account only.
         </p>
       </div>
 
       {/* ── Leave ─────────────────────────────────────────────── */}
       <div className="card p-5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Leave</p>
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Leave</p>
         <NotifRow
           label="Leave Approved"
           description="When your leave request is approved by a manager."
@@ -155,7 +157,7 @@ const NotificationSettings = () => {
 
       {/* ── Tasks & Projects ──────────────────────────────────── */}
       <div className="card p-5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Tasks &amp; Projects</p>
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Tasks &amp; Projects</p>
         <NotifRow
           label="New Task Assigned"
           description="When a task is assigned to you."
@@ -176,7 +178,7 @@ const NotificationSettings = () => {
 
       {/* ── Payroll ───────────────────────────────────────────── */}
       <div className="card p-5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Payroll</p>
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Payroll</p>
         <NotifRow
           label="Payslip Ready"
           description="When your monthly payslip is generated."
@@ -189,7 +191,7 @@ const NotificationSettings = () => {
 
       {/* ── Attendance ────────────────────────────────────────── */}
       <div className="card p-5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Attendance</p>
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Attendance</p>
         <NotifRow
           label="Attendance Regularization Approved"
           description="When your regularization request is reviewed."
@@ -198,11 +200,27 @@ const NotificationSettings = () => {
           onToggle={toggle}
           showEmail={false}
         />
+        <NotifRow
+          label="Check-in Reminder"
+          description="Daily reminder to mark your attendance at check-in time."
+          inappKey="checkin_reminder_inapp"
+          prefs={prefs}
+          onToggle={toggle}
+          showEmail={false}
+        />
+        <NotifRow
+          label="Check-out Reminder"
+          description="Daily reminder to check out at the end of your shift."
+          inappKey="checkout_reminder_inapp"
+          prefs={prefs}
+          onToggle={toggle}
+          showEmail={false}
+        />
       </div>
 
       {/* ── Misc ──────────────────────────────────────────────── */}
       <div className="card p-5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Miscellaneous</p>
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Miscellaneous</p>
         <NotifRow
           label="Birthday Reminders"
           description="In-app reminder on teammates' birthdays."

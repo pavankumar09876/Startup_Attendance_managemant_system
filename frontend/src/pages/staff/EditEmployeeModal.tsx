@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -10,6 +10,7 @@ import type { User, EmploymentType, WorkLocation } from '@/types/user.types'
 import { ROLES, ROLE_LABELS } from '@/constants/roles'
 import Modal from '@/components/common/Modal'
 import Button from '@/components/common/Button'
+import DatePicker from '@/components/common/DatePicker'
 import { cn } from '@/utils/cn'
 
 const schema = z.object({
@@ -37,7 +38,9 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 const inputCls = cn(
-  'w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm',
+  'w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm',
+  'bg-white dark:bg-gray-900 text-gray-900 dark:text-white',
+  'placeholder-gray-400 dark:placeholder-gray-500',
   'focus:outline-none focus:ring-2 focus:ring-blue-500',
 )
 
@@ -52,14 +55,16 @@ const EditEmployeeModal = ({ employee, onClose }: Props) => {
   })
 
   const { data: managers = [] } = useQuery({
-    queryKey: ['users', 'managers'],
-    queryFn: () => staffService.getEmployees({ limit: 100 }),
+    queryKey: ['users', 'managers-list'],
+    queryFn: () => staffService.getEmployees({ role: ROLES.MANAGER, limit: 100 }),
     select: (d) => d.users?.filter((u) => u.id !== employee.id) ?? [],
   })
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
+
+  const watchedRole = watch('role')
 
   useEffect(() => {
     reset({
@@ -99,50 +104,61 @@ const EditEmployeeModal = ({ employee, onClose }: Props) => {
 
   return (
     <Modal open onClose={onClose} title={`Edit — ${employee.first_name} ${employee.last_name}`} size="lg">
-      <form onSubmit={handleSubmit((d) => mutate(d))} className="space-y-5">
-        {/* Personal */}
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Personal Info</p>
-          <div className="grid grid-cols-2 gap-3">
+      <form onSubmit={handleSubmit((d) => mutate(d))} className="space-y-6 max-h-[75vh] overflow-y-auto px-1">
+
+        {/* ── Personal Info ──────────────────────────────────── */}
+        <fieldset>
+          <legend className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span className="w-5 h-px bg-gray-200 dark:bg-gray-700" />
+            Personal Info
+            <span className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+          </legend>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">First Name</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">First Name</label>
               <input {...register('first_name')} className={inputCls} />
               {errors.first_name && <p className="text-xs text-red-500 mt-0.5">{errors.first_name.message}</p>}
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Last Name</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Last Name</label>
               <input {...register('last_name')} className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Email</label>
               <input type="email" {...register('email')} className={inputCls} />
               {errors.email && <p className="text-xs text-red-500 mt-0.5">{errors.email.message}</p>}
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
-              <input {...register('phone')} className={inputCls} />
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Phone</label>
+              <input {...register('phone')} placeholder="+91 98765 43210" className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Date of Birth</label>
-              <input type="date" {...register('date_of_birth')} className={inputCls} />
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Date of Birth</label>
+              <Controller name="date_of_birth" control={control} render={({ field }) => (
+                <DatePicker value={field.value ?? ''} onChange={field.onChange} placeholder="Select DOB" />
+              )} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Emergency Contact</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Emergency Contact</label>
               <input {...register('emergency_contact')} className={inputCls} />
             </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Address</label>
+              <textarea rows={2} {...register('address')} className={cn(inputCls, 'resize-none')} />
+            </div>
           </div>
-          <div className="mt-3">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Address</label>
-            <textarea rows={2} {...register('address')} className={cn(inputCls, 'resize-none')} />
-          </div>
-        </div>
+        </fieldset>
 
-        {/* Employment */}
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Employment</p>
-          <div className="grid grid-cols-2 gap-3">
+        {/* ── Employment ─────────────────────────────────────── */}
+        <fieldset>
+          <legend className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span className="w-5 h-px bg-gray-200 dark:bg-gray-700" />
+            Employment
+            <span className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+          </legend>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Department</label>
               <select {...register('department_id')} className={inputCls}>
                 <option value="">None</option>
                 {departments.map((d) => (
@@ -151,11 +167,11 @@ const EditEmployeeModal = ({ employee, onClose }: Props) => {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Designation</label>
               <input {...register('designation')} className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Manager</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Reporting Manager</label>
               <select {...register('manager_id')} className={inputCls}>
                 <option value="">None</option>
                 {managers.map((m) => (
@@ -166,11 +182,13 @@ const EditEmployeeModal = ({ employee, onClose }: Props) => {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Joining Date</label>
-              <input type="date" {...register('date_of_joining')} className={inputCls} />
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Joining Date</label>
+              <Controller name="date_of_joining" control={control} render={({ field }) => (
+                <DatePicker value={field.value ?? ''} onChange={field.onChange} placeholder="Select date" />
+              )} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Employment Type</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Employment Type</label>
               <select {...register('employment_type')} className={inputCls}>
                 <option value="full_time">Full-time</option>
                 <option value="part_time">Part-time</option>
@@ -179,7 +197,7 @@ const EditEmployeeModal = ({ employee, onClose }: Props) => {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Work Location</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Work Location</label>
               <select {...register('work_location')} className={inputCls}>
                 <option value="office">Office</option>
                 <option value="remote">Remote</option>
@@ -187,59 +205,68 @@ const EditEmployeeModal = ({ employee, onClose }: Props) => {
               </select>
             </div>
           </div>
-        </div>
+        </fieldset>
 
-        {/* Role */}
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">System Role</p>
-          <div className="grid grid-cols-3 gap-2">
+        {/* ── System Role ────────────────────────────────────── */}
+        <fieldset>
+          <legend className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span className="w-5 h-px bg-gray-200 dark:bg-gray-700" />
+            System Role
+            <span className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+          </legend>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {(Object.values(ROLES) as ROLES[]).map((r) => (
               <label key={r} className="cursor-pointer">
                 <input type="radio" value={r} className="sr-only" {...register('role')} />
                 <div className={cn(
                   'px-3 py-2 rounded-lg border text-xs font-medium transition-all text-center',
-                  employee.role === r
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300',
+                  watchedRole === r
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-700',
                 )}>
                   {ROLE_LABELS[r]}
                 </div>
               </label>
             ))}
           </div>
-        </div>
+        </fieldset>
 
-        {/* Salary */}
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Salary</p>
-          <div className="grid grid-cols-3 gap-3">
+        {/* ── Salary & Banking ───────────────────────────────── */}
+        <fieldset>
+          <legend className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span className="w-5 h-px bg-gray-200 dark:bg-gray-700" />
+            Salary & Banking
+            <span className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+          </legend>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3">
             {[
               { name: 'salary' as const,    label: 'Basic (₹)' },
               { name: 'hra' as const,       label: 'HRA (₹)' },
               { name: 'allowances' as const, label: 'Allowances (₹)' },
             ].map(({ name, label }) => (
               <div key={name}>
-                <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{label}</label>
                 <div className="relative">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">₹</span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-xs">₹</span>
                   <input type="number" min="0" {...register(name)} className={cn(inputCls, 'pl-6')} />
                 </div>
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-3 mt-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Bank Account</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Bank Account</label>
               <input {...register('bank_account')} className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">IFSC Code</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">IFSC Code</label>
               <input {...register('ifsc_code')} className={cn(inputCls, 'uppercase')} />
             </div>
           </div>
-        </div>
+        </fieldset>
 
-        <div className="flex gap-3 pt-1 border-t border-gray-100">
+        {/* ── Actions ────────────────────────────────────────── */}
+        <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-900 pb-1">
           <Button variant="secondary" className="flex-1" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>

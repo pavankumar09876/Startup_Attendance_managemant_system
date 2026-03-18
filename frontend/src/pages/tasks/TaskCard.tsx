@@ -1,11 +1,19 @@
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { Clock, CheckSquare, Tag } from 'lucide-react'
+import { Clock, CheckSquare, Tag, Bug, BookOpen, Zap } from 'lucide-react'
 
-import type { Task, TaskPriority } from '@/types/project.types'
+import type { Task, TaskPriority, IssueType } from '@/types/project.types'
 import { formatDate } from '@/utils/formatDate'
 import Avatar from '@/components/common/Avatar'
 import { cn } from '@/utils/cn'
+
+// ── Issue type icon + color ────────────────────────────────────────────────
+const ISSUE_ICON: Record<IssueType, React.ReactNode> = {
+  task:  <CheckSquare size={11} className="text-blue-500" />,
+  bug:   <Bug size={11} className="text-red-500" />,
+  story: <BookOpen size={11} className="text-green-500" />,
+  epic:  <Zap size={11} className="text-purple-500" />,
+}
 
 // ── Priority left-border color ─────────────────────────────────────────────
 const PRIORITY_BORDER: Record<TaskPriority, string> = {
@@ -45,16 +53,21 @@ const TaskCard = ({ task, showProject = false, onClick }: Props) => {
       onClick={onClick}
       style={{ transform: CSS.Translate.toString(transform) }}
       className={cn(
-        'bg-white rounded-lg border border-l-4 p-3 cursor-pointer select-none',
+        'bg-white dark:bg-gray-900 rounded-lg border border-l-4 p-3 cursor-pointer select-none',
         'hover:shadow-md transition-all',
         PRIORITY_BORDER[task.priority],
         isDragging && 'opacity-50 scale-105 shadow-lg ring-2 ring-blue-300 z-50',
       )}
     >
-      {/* Title */}
-      <p className="text-sm font-medium text-gray-800 line-clamp-2 mb-2 leading-snug">
-        {task.title}
-      </p>
+      {/* Issue type + Title */}
+      <div className="flex items-start gap-1.5 mb-2">
+        <span className="shrink-0 mt-0.5">
+          {ISSUE_ICON[task.issue_type ?? 'task']}
+        </span>
+        <p className="text-sm font-medium text-gray-800 dark:text-gray-100 line-clamp-2 leading-snug">
+          {task.title}
+        </p>
+      </div>
 
       {/* Project pill (global my-tasks view) */}
       {showProject && task.project_name && (
@@ -64,12 +77,21 @@ const TaskCard = ({ task, showProject = false, onClick }: Props) => {
         </span>
       )}
 
+      {/* Epic badge */}
+      {task.epic_title && (
+        <span className="inline-flex items-center gap-1 mb-2 text-[10px] font-medium bg-purple-50 dark:bg-purple-900/30
+          text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded-full truncate max-w-full">
+          <Zap size={8} />
+          {task.epic_title}
+        </span>
+      )}
+
       {/* Labels */}
       {task.labels && task.labels.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
           {task.labels.slice(0, 3).map((l) => (
-            <span key={l} className="flex items-center gap-0.5 text-[10px] bg-gray-100
-              text-gray-600 px-1.5 py-0.5 rounded-full">
+            <span key={l} className="flex items-center gap-0.5 text-[10px] bg-gray-100 dark:bg-gray-800
+              text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
               <Tag size={8} />
               {l}
             </span>
@@ -79,7 +101,7 @@ const TaskCard = ({ task, showProject = false, onClick }: Props) => {
 
       {/* Footer row */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-[11px] text-gray-400">
+        <div className="flex items-center gap-2 text-[11px] text-gray-400 dark:text-gray-400">
           {/* Priority dot */}
           <span className={cn('w-2 h-2 rounded-full', PRIORITY_DOT[task.priority])} />
 
@@ -87,7 +109,7 @@ const TaskCard = ({ task, showProject = false, onClick }: Props) => {
           {task.due_date && (
             <span className={cn(
               'flex items-center gap-0.5',
-              isOverdue ? 'text-red-500 font-medium' : 'text-gray-400',
+              isOverdue ? 'text-red-500 font-medium' : 'text-gray-400 dark:text-gray-400',
             )}>
               <Clock size={10} />
               {formatDate(task.due_date, 'MMM d')}
@@ -96,7 +118,7 @@ const TaskCard = ({ task, showProject = false, onClick }: Props) => {
 
           {/* Subtask progress */}
           {(task.subtask_count ?? 0) > 0 && (
-            <span className="flex items-center gap-0.5 text-gray-400">
+            <span className="flex items-center gap-0.5 text-gray-400 dark:text-gray-400">
               <CheckSquare size={10} />
               {task.completed_subtasks ?? 0}/{task.subtask_count}
             </span>

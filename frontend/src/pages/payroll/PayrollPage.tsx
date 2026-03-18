@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
   Download, Play, CheckCircle, Eye, FileText,
-  Users, DollarSign, Clock, Minus, AlertCircle,
+  Users, DollarSign, Clock, Minus, AlertCircle, CalendarCheck,
 } from 'lucide-react'
 
 import { payrollService } from '@/services/payroll.service'
@@ -36,7 +36,7 @@ const StatCard = ({
   sub?: string
   color?: 'blue' | 'green' | 'amber' | 'red'
 }) => {
-  const bg = { blue: 'bg-blue-50', green: 'bg-green-50', amber: 'bg-amber-50', red: 'bg-red-50' }[color]
+  const bg = { blue: 'bg-blue-50 dark:bg-blue-900/20', green: 'bg-green-50 dark:bg-green-900/20', amber: 'bg-amber-50 dark:bg-amber-900/20', red: 'bg-red-50 dark:bg-red-900/20' }[color]
   const ic = { blue: 'text-blue-600', green: 'text-green-600', amber: 'text-amber-600', red: 'text-red-600' }[color]
   return (
     <div className="card p-5">
@@ -45,9 +45,9 @@ const StatCard = ({
           <span className={ic}>{icon}</span>
         </div>
         <div>
-          <p className="text-xs text-gray-500 mb-0.5">{label}</p>
-          <p className="text-xl font-bold text-gray-900">{value}</p>
-          {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{label}</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">{value}</p>
+          {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
         </div>
       </div>
     </div>
@@ -104,6 +104,16 @@ const PayrollPage = () => {
     onError: (err: any) => toast.error(err?.response?.data?.detail ?? 'Failed'),
   })
 
+  const { mutate: allocateLeaves, isPending: allocating } = useMutation({
+    mutationFn: () => payrollService.allocateLeaveBalances(year),
+    onSuccess: (res) => toast.success(
+      res.allocated > 0
+        ? `Allocated leave balances for ${res.allocated} records (${res.year})`
+        : `All leave balances already allocated for ${res.year}`
+    ),
+    onError: (err: any) => toast.error(err?.response?.data?.detail ?? 'Allocation failed'),
+  })
+
   const handleExport = async () => {
     try {
       const blob = await payrollService.exportCSV(month, year)
@@ -122,12 +132,12 @@ const PayrollPage = () => {
   if (isEmployee) {
     return (
       <div className="space-y-5">
-        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
           <button
             onClick={() => setPageTab('payroll')}
             className={cn(
               'px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
-              pageTab === 'payroll' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+              pageTab === 'payroll' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
             )}
           >
             My Payslips
@@ -136,7 +146,7 @@ const PayrollPage = () => {
             onClick={() => setPageTab('expenses')}
             className={cn(
               'px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
-              pageTab === 'expenses' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+              pageTab === 'expenses' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
             )}
           >
             Expenses
@@ -155,12 +165,12 @@ const PayrollPage = () => {
       <div className="space-y-5">
         {/* ── Header ──────────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
             <button
               onClick={() => setPageTab('payroll')}
               className={cn(
                 'px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
-                pageTab === 'payroll' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+                pageTab === 'payroll' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
               )}
             >
               Payroll
@@ -169,7 +179,7 @@ const PayrollPage = () => {
               onClick={() => setPageTab('expenses')}
               className={cn(
                 'px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
-                pageTab === 'expenses' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+                pageTab === 'expenses' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
               )}
             >
               Expenses
@@ -181,7 +191,9 @@ const PayrollPage = () => {
               <select
                 value={month}
                 onChange={(e) => setMonth(Number(e.target.value))}
-                className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                  bg-white dark:bg-gray-900 text-gray-900 dark:text-white
+                  focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {MONTHS.map((m, i) => (
                   <option key={m} value={i + 1}>{m}</option>
@@ -190,7 +202,9 @@ const PayrollPage = () => {
               <select
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
-                className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                  bg-white dark:bg-gray-900 text-gray-900 dark:text-white
+                  focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {years.map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -198,6 +212,14 @@ const PayrollPage = () => {
               </select>
               <Button variant="secondary" leftIcon={<Download size={14} />} onClick={handleExport}>
                 Export CSV
+              </Button>
+              <Button
+                variant="secondary"
+                leftIcon={<CalendarCheck size={14} />}
+                onClick={() => allocateLeaves()}
+                disabled={allocating}
+              >
+                {allocating ? 'Allocating…' : 'Allocate Leaves'}
               </Button>
               {!isProcessed && (
                 <Button leftIcon={<Play size={14} />} onClick={() => setRunOpen(true)}>
@@ -217,8 +239,8 @@ const PayrollPage = () => {
               <div className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-xl border',
                 isProcessed
-                  ? 'bg-green-50 border-green-200 text-green-800'
-                  : 'bg-amber-50 border-amber-200 text-amber-800',
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300'
+                  : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300',
               )}>
                 {isProcessed
                   ? <CheckCircle size={16} className="text-green-600 shrink-0" />
@@ -229,7 +251,7 @@ const PayrollPage = () => {
                     : `Payroll not yet processed for ${MONTHS[month - 1]} ${year}`}
                 </p>
                 {isProcessed && summary && (
-                  <div className="ml-auto flex items-center gap-4 text-xs text-green-700">
+                  <div className="ml-auto flex items-center gap-4 text-xs text-green-700 dark:text-green-400">
                     <span>{summary.paid_count} paid</span>
                     <span>{summary.pending_count} pending</span>
                   </div>
@@ -288,7 +310,7 @@ const PayrollPage = () => {
               {loadingEntries ? (
                 <div className="p-5 space-y-3">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="h-12 bg-gray-100 animate-pulse rounded-lg" />
+                    <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
                   ))}
                 </div>
               ) : entries.length === 0 ? (
@@ -309,27 +331,27 @@ const PayrollPage = () => {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
                         {['Employee', 'Basic', 'Allowances', 'Deductions', 'Net Salary', 'Status', 'Actions'].map((h) => (
-                          <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
+                          <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">{h}</th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                       {entries.map((entry) => (
-                        <tr key={entry.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2.5">
                               <Avatar name={entry.employee_name} size="sm" />
                               <div>
-                                <p className="font-medium text-gray-800">{entry.employee_name}</p>
-                                <p className="text-xs text-gray-400">{entry.employee_code}</p>
+                                <p className="font-medium text-gray-800 dark:text-gray-100">{entry.employee_name}</p>
+                                <p className="text-xs text-gray-400 dark:text-gray-500">{entry.employee_code}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-700">{fmtINR(entry.basic)}</td>
-                          <td className="px-4 py-3 text-gray-700">
+                          <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{fmtINR(entry.basic)}</td>
+                          <td className="px-4 py-3 text-gray-700 dark:text-gray-200">
                             {fmtINR(entry.hra + entry.travel_allowance + entry.bonus + entry.overtime)}
                           </td>
                           <td className="px-4 py-3 text-red-600">{fmtINR(entry.total_deductions)}</td>
@@ -349,7 +371,7 @@ const PayrollPage = () => {
                               <button
                                 onClick={() => setSelectedPayslip(entry.id)}
                                 className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800
-                                  px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                                  px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                               >
                                 <Eye size={11} />
                                 View
@@ -359,7 +381,7 @@ const PayrollPage = () => {
                                   onClick={() => markPaid(entry.id)}
                                   disabled={marking}
                                   className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800
-                                    px-2 py-1 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-50"
+                                    px-2 py-1 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors disabled:opacity-50"
                                 >
                                   <CheckCircle size={11} />
                                   Mark Paid

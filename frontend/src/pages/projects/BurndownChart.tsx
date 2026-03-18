@@ -33,7 +33,7 @@ const BurndownChart = ({ projectId, startDate, endDate, totalTasks }: Props) => 
 
   if (isNaN(start.getTime()) || isNaN(end.getTime())) {
     return (
-      <div className="h-48 flex items-center justify-center text-sm text-gray-400">
+      <div className="h-48 flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
         Set start and end dates to see the burndown chart.
       </div>
     )
@@ -64,7 +64,7 @@ const BurndownChart = ({ projectId, startDate, endDate, totalTasks }: Props) => 
     <div>
       <div className="flex items-center justify-between mb-3">
         <h4 className="text-sm font-semibold text-gray-800 dark:text-white">Burndown Chart</h4>
-        <div className="flex items-center gap-4 text-xs text-gray-400">
+        <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-0.5 bg-blue-500 inline-block" />Ideal
           </span>

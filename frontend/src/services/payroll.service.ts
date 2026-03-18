@@ -1,6 +1,5 @@
 import api from './api'
 import type { PayrollEntry, PayrollSummary, Expense, CreateExpensePayload } from '@/types/payroll.types'
-import type { Payslip } from '@/types/user.types'
 
 export const payrollService = {
   // ── Payroll ───────────────────────────────────────────────────────────────
@@ -39,7 +38,7 @@ export const payrollService = {
 
   // ── Payslips ──────────────────────────────────────────────────────────────
   getMyPayslips: () =>
-    api.get<Payslip[]>('/api/payroll/my-payslips').then((r) => r.data),
+    api.get<PayrollEntry[]>('/api/payroll/my').then((r) => r.data),
 
   getPayslip: (id: string) =>
     api.get<PayrollEntry>(`/api/payroll/payslips/${id}`).then((r) => r.data),
@@ -48,6 +47,10 @@ export const payrollService = {
     api
       .get(`/api/payroll/payslips/${id}/pdf`, { responseType: 'blob' })
       .then((r) => r.data),
+
+  allocateLeaveBalances: (year: number) =>
+    api.post<{ allocated: number; year: number }>('/api/payroll/leave-balances/allocate', null, { params: { year } })
+       .then((r) => r.data),
 
   // ── Expenses ──────────────────────────────────────────────────────────────
   getMyExpenses: () =>

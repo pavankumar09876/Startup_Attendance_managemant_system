@@ -8,11 +8,27 @@ export interface Attendance {
   date: string
   check_in?: string
   check_out?: string
+  break_start?: string
+  break_end?: string
+  break_minutes?: number
+  on_break?: boolean
   status: AttendanceStatus
   working_hours?: number
   overtime_hours?: number
+  shift_id?: string
   notes?: string
   location?: 'office' | 'remote'
+  created_at: string
+}
+
+export interface Shift {
+  id: string
+  name: string
+  start_time: string   // "HH:MM"
+  end_time: string     // "HH:MM"
+  grace_minutes: number
+  is_night_shift: boolean
+  is_active: boolean
   created_at: string
 }
 
@@ -34,6 +50,8 @@ export interface TodayStatus {
   working_hours?: number
   status?: AttendanceStatus
   location?: 'office' | 'remote'
+  on_break?: boolean
+  break_minutes?: number
 }
 
 export interface Regularization {

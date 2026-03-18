@@ -1,27 +1,49 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, Form
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from datetime import date, time
-from decimal import Decimal
+from sqlalchemy import select
+from datetime import date
 from typing import Optional
 import uuid
+import io
+import csv
 
 from app.database import get_db
 from app.models.attendance import Attendance, AttendanceStatus
 from app.models.user import User, Role
-from app.schemas.attendance import AttendanceCreate, AttendanceUpdate, AttendanceOut, AttendanceSummary
-from app.utils.dependencies import get_current_user, require_roles
+from app.schemas.attendance import (
+    AttendanceCreate, AttendanceUpdate, AttendanceOut, AttendanceSummary,
+    TeamAttendanceRecord, TeamAttendanceSummary, PaginatedTeamAttendance,
+)
+from app.utils.dependencies import get_current_user, require_roles, require_permission
+from app.utils.scoping import scope_query
+from app.services.exceptions import ServiceError
+from app.services.attendance_service import (
+    calc_working_hours,
+    check_in as svc_check_in,
+    check_out as svc_check_out,
+    check_in_geo as svc_check_in_geo,
+    start_break as svc_start_break,
+    end_break as svc_end_break,
+    get_attendance_summary as svc_get_attendance_summary,
+    get_team_attendance as svc_get_team_attendance,
+    export_team_attendance as svc_export_team_attendance,
+)
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
 
-def _calc_working_hours(check_in: time, check_out: time) -> Decimal:
-    from datetime import datetime
-    ci = datetime.combine(date.today(), check_in)
-    co = datetime.combine(date.today(), check_out)
-    diff = (co - ci).total_seconds() / 3600
-    return Decimal(str(round(diff, 2)))
+# ---------------------------------------------------------------------------
+# Thin helper: convert ServiceError → HTTPException
+# ---------------------------------------------------------------------------
 
+def _handle_service_error(e: ServiceError):
+    raise HTTPException(status_code=e.code, detail=e.message)
+
+
+# ---------------------------------------------------------------------------
+# List / CRUD endpoints (kept in router — thin DB queries + schema mapping)
+# ---------------------------------------------------------------------------
 
 @router.get("/", response_model=list[AttendanceOut])
 async def list_attendance(
@@ -32,13 +54,11 @@ async def list_attendance(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("attendance:view_own")),
 ):
-    q = select(Attendance)
-    # Employees can only see their own records
-    if current_user.role == Role.EMPLOYEE:
-        q = q.where(Attendance.employee_id == current_user.id)
-    elif employee_id:
+    q = scope_query(select(Attendance), current_user, employee_id_col=Attendance.employee_id)
+    # If a specific employee_id is requested and user has access
+    if employee_id and current_user.role not in (Role.EMPLOYEE,):
         q = q.where(Attendance.employee_id == employee_id)
 
     if start_date:
@@ -55,34 +75,14 @@ async def list_attendance(
 
 @router.post("/check-in", response_model=AttendanceOut)
 async def check_in(
+    wfh: bool = Query(False),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    today = date.today()
-    existing = await db.execute(
-        select(Attendance).where(
-            Attendance.employee_id == current_user.id,
-            Attendance.date == today,
-        )
-    )
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Already checked in today")
-
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc).time().replace(tzinfo=None)
-    # Mark late if check-in is after 09:30
-    status = AttendanceStatus.LATE if now.hour > 9 or (now.hour == 9 and now.minute > 30) else AttendanceStatus.PRESENT
-
-    record = Attendance(
-        employee_id=current_user.id,
-        date=today,
-        check_in=now,
-        status=status,
-    )
-    db.add(record)
-    await db.commit()
-    await db.refresh(record)
-    return record
+    try:
+        return await svc_check_in(db, current_user, wfh=wfh)
+    except ServiceError as e:
+        _handle_service_error(e)
 
 
 @router.post("/check-out", response_model=AttendanceOut)
@@ -90,41 +90,21 @@ async def check_out(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    today = date.today()
-    result = await db.execute(
-        select(Attendance).where(
-            Attendance.employee_id == current_user.id,
-            Attendance.date == today,
-        )
-    )
-    record = result.scalar_one_or_none()
-    if not record:
-        raise HTTPException(status_code=404, detail="No check-in found for today")
-    if record.check_out:
-        raise HTTPException(status_code=400, detail="Already checked out")
-
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc).time().replace(tzinfo=None)
-    record.check_out = now
-    record.working_hours = _calc_working_hours(record.check_in, now)
-    std_hours = Decimal("8.0")
-    if record.working_hours > std_hours:
-        record.overtime_hours = record.working_hours - std_hours
-
-    await db.commit()
-    await db.refresh(record)
-    return record
+    try:
+        return await svc_check_out(db, current_user)
+    except ServiceError as e:
+        _handle_service_error(e)
 
 
 @router.post("/", response_model=AttendanceOut, status_code=201)
 async def create_attendance(
     payload: AttendanceCreate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(Role.SUPER_ADMIN, Role.ADMIN, Role.HR)),
+    _: User = Depends(require_permission("attendance:create")),
 ):
     record = Attendance(**payload.model_dump())
     if record.check_in and record.check_out:
-        record.working_hours = _calc_working_hours(record.check_in, record.check_out)
+        record.working_hours = calc_working_hours(record.check_in, record.check_out)
     db.add(record)
     await db.commit()
     await db.refresh(record)
@@ -136,7 +116,7 @@ async def update_attendance(
     attendance_id: uuid.UUID,
     payload: AttendanceUpdate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(Role.SUPER_ADMIN, Role.ADMIN, Role.HR)),
+    _: User = Depends(require_permission("attendance:update")),
 ):
     result = await db.execute(select(Attendance).where(Attendance.id == attendance_id))
     record = result.scalar_one_or_none()
@@ -147,7 +127,7 @@ async def update_attendance(
         setattr(record, field, value)
 
     if record.check_in and record.check_out:
-        record.working_hours = _calc_working_hours(record.check_in, record.check_out)
+        record.working_hours = calc_working_hours(record.check_in, record.check_out)
 
     await db.commit()
     await db.refresh(record)
@@ -160,116 +140,138 @@ async def get_summary(
     month: int = Query(..., ge=1, le=12),
     year: int = Query(..., ge=2000),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    from calendar import monthrange
-    from datetime import date as dt
-    start = dt(year, month, 1)
-    end = dt(year, month, monthrange(year, month)[1])
+    # Ownership / scoping check
+    if employee_id != current_user.id:
+        if current_user.role == Role.EMPLOYEE:
+            raise HTTPException(status_code=403, detail="Can only view your own attendance summary")
+        if current_user.role == Role.MANAGER:
+            # Managers can view their direct reports
+            emp_result = await db.execute(select(User).where(User.id == employee_id))
+            emp = emp_result.scalar_one_or_none()
+            if not emp or emp.manager_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Can only view your team's attendance")
+    try:
+        data = await svc_get_attendance_summary(db, employee_id, month, year)
+    except ServiceError as e:
+        _handle_service_error(e)
+    return AttendanceSummary(**data)
 
-    result = await db.execute(
-        select(Attendance).where(
-            Attendance.employee_id == employee_id,
-            Attendance.date >= start,
-            Attendance.date <= end,
-        )
-    )
-    records = result.scalars().all()
 
-    summary = AttendanceSummary(
-        total_days=len(records),
-        present=sum(1 for r in records if r.status == AttendanceStatus.PRESENT),
-        absent=sum(1 for r in records if r.status == AttendanceStatus.ABSENT),
-        late=sum(1 for r in records if r.status == AttendanceStatus.LATE),
-        half_day=sum(1 for r in records if r.status == AttendanceStatus.HALF_DAY),
-        on_leave=sum(1 for r in records if r.status == AttendanceStatus.ON_LEAVE),
-        avg_working_hours=float(
-            sum(r.working_hours or 0 for r in records) / len(records)
-        ) if records else 0.0,
+# ── Team attendance (managers / admins) ───────────────────────────────────────
+
+@router.get("/team", response_model=PaginatedTeamAttendance)
+async def get_team_attendance(
+    department: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("attendance:view_team", "attendance:view_all")),
+):
+    filters = {
+        "department": department,
+        "date_from": date_from,
+        "date_to": date_to,
+        "status": status,
+        "search": search,
+    }
+    try:
+        data = await svc_get_team_attendance(db, current_user, filters, skip, limit)
+    except ServiceError as e:
+        _handle_service_error(e)
+
+    summary = TeamAttendanceSummary(**data["summary"])
+
+    records = []
+    for item in data["records"]:
+        att = item["attendance"]
+        rec = TeamAttendanceRecord.model_validate(att)
+        rec.employee_name = item["employee_name"]
+        rec.employee_avatar = item["employee_avatar"]
+        rec.department = item["department"]
+        records.append(rec)
+
+    return PaginatedTeamAttendance(records=records, summary=summary, total=data["total"])
+
+
+@router.get("/export")
+async def export_team_attendance(
+    department: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("attendance:export")),
+):
+    filters = {
+        "department": department,
+        "date_from": date_from,
+        "date_to": date_to,
+        "status": status,
+        "search": search,
+    }
+    try:
+        csv_rows = await svc_export_team_attendance(db, current_user, filters)
+    except ServiceError as e:
+        _handle_service_error(e)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    for row in csv_rows:
+        writer.writerow(row)
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=team_attendance.csv"},
     )
-    return summary
 
 
 # ── Geo-fenced + selfie check-in ─────────────────────────────────────────────
-from fastapi import Form
-from typing import Optional as Opt
 
 @router.post('/check-in/geo', response_model=AttendanceOut)
 async def check_in_geo(
     latitude:   float = Form(...),
     longitude:  float = Form(...),
-    selfie:     Opt[UploadFile] = None,
+    selfie:     Optional[UploadFile] = None,
     db:         AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Check in with geo-coordinates and optional selfie."""
-    import math, os
-    from fastapi import UploadFile
+    try:
+        return await svc_check_in_geo(db, current_user, latitude, longitude, selfie_file=selfie)
+    except ServiceError as e:
+        _handle_service_error(e)
 
-    # Load attendance config for geofence settings
-    from app.models.settings import AttendanceConfig
-    from sqlalchemy import select as _select
-    config_res = await db.execute(_select(AttendanceConfig).limit(1))
-    config = config_res.scalar_one_or_none()
 
-    # Validate geofence if office location is set
-    if config and config.office_lat and config.office_lng and config.geofence_radius_meters:
-        # Haversine distance
-        R = 6371000  # Earth radius in metres
-        lat1, lon1 = math.radians(config.office_lat), math.radians(config.office_lng)
-        lat2, lon2 = math.radians(latitude),           math.radians(longitude)
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-        a = math.sin(dlat/2)**2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2)**2
-        dist = R * 2 * math.asin(math.sqrt(a))
-        if dist > config.geofence_radius_meters:
-            raise HTTPException(
-                status_code=400,
-                detail=f'You are {int(dist)}m from the office (max {config.geofence_radius_meters}m).'
-            )
+# ── Break tracking ─────────────────────────────────────────────────────────────
 
-    # Save selfie if provided
-    selfie_url = None
-    if selfie:
-        upload_dir = 'uploads/selfies'
-        os.makedirs(upload_dir, exist_ok=True)
-        ext = os.path.splitext(selfie.filename or 'selfie.jpg')[1]
-        fname = f'{current_user.id}_{date.today()}{ext}'
-        path = os.path.join(upload_dir, fname)
-        content = await selfie.read()
-        with open(path, 'wb') as f:
-            f.write(content)
-        selfie_url = f'/uploads/selfies/{fname}'
+@router.post("/break-start", response_model=AttendanceOut)
+async def break_start(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Start a break for the current employee."""
+    try:
+        return await svc_start_break(db, current_user)
+    except ServiceError as e:
+        _handle_service_error(e)
 
-    # Now do the normal check-in
-    today = date.today()
-    existing = await db.execute(
-        select(Attendance).where(
-            Attendance.employee_id == current_user.id,
-            Attendance.date == today,
-        )
-    )
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail='Already checked in today')
 
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc).time().replace(tzinfo=None)
-    late_after_min = (config.grace_period_minutes if config else 10)
-    cutoff_h, cutoff_m = 9, 0 + late_after_min
-    status = (
-        AttendanceStatus.LATE
-        if now.hour > 9 or (now.hour == 9 and now.minute > late_after_min)
-        else AttendanceStatus.PRESENT
-    )
-
-    record = Attendance(
-        employee_id=current_user.id,
-        date=today,
-        check_in=now,
-        status=status,
-        notes=selfie_url,
-    )
-    db.add(record)
-    await db.commit()
-    await db.refresh(record)
-    return record
+@router.post("/break-end", response_model=AttendanceOut)
+async def break_end(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """End the current break and accumulate break time."""
+    try:
+        return await svc_end_break(db, current_user)
+    except ServiceError as e:
+        _handle_service_error(e)

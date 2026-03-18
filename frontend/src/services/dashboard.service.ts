@@ -1,12 +1,15 @@
 import api from './api'
 
 // ── Shared ────────────────────────────────────────────────────────────────────
-export interface TrendPoint { date: string; present: number; absent: number }
+export interface TrendPoint { date: string; present: number; absent: number; late?: number }
 export interface DeptHeadcount { department: string; count: number }
 export interface LeaveDistribution { type: string; value: number }
 export interface RecentActivity { id: string; user: string; avatar?: string; action: string; created_at: string }
 export interface AbsentEmployee { id: string; name: string; department: string; last_seen: string }
 export interface PendingApproval { id: string; employee: string; type: string; since: string }
+
+// ── Sprint Velocity ───────────────────────────────────────────────────────────
+export interface SprintVelocity { name: string; completed: number; capacity: number }
 
 // ── Admin stats ───────────────────────────────────────────────────────────────
 export interface AdminStats {
@@ -22,6 +25,7 @@ export interface AdminStats {
   absent_today: AbsentEmployee[]
   pending_approvals: PendingApproval[]
   recent_activity: RecentActivity[]
+  sprint_velocity: SprintVelocity[]
 }
 
 // ── Manager stats ─────────────────────────────────────────────────────────────
@@ -39,6 +43,9 @@ export interface ManagerStats {
   at_risk_tasks: AtRiskTask[]
 }
 
+// ── Leave Consumption ─────────────────────────────────────────────────────────
+export interface LeaveConsumption { type: string; used: number; total: number }
+
 // ── Employee stats ────────────────────────────────────────────────────────────
 export interface MyTask { id: string; title: string; project: string; status: string; priority: string }
 export interface MyLeave { id: string; leave_type: string; start_date: string; end_date: string; status: string }
@@ -54,6 +61,7 @@ export interface EmployeeStats {
   my_leaves: MyLeave[]
   next_holiday?: { name: string; date: string }
   next_deadline?: { title: string; due_date: string; project: string }
+  leave_consumption?: LeaveConsumption[]
 }
 
 // ── Service ───────────────────────────────────────────────────────────────────

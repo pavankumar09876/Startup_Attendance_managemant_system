@@ -1,5 +1,5 @@
 import api from './api'
-import type { Task, SubTask, TaskComment, TimeLog } from '@/types/project.types'
+import type { Task, SubTask, TaskComment, TimeLog, TaskActivity, SavedTaskView, EpicProgress } from '@/types/project.types'
 
 export interface TaskFilters {
   project_id?: string
@@ -8,6 +8,11 @@ export interface TaskFilters {
   assignee_id?: string
   due?: 'today' | 'week' | 'overdue' | 'completed'
   search?: string
+  label?: string
+  sprint_id?: string
+  issue_type?: string
+  due_from?: string
+  due_to?: string
   limit?: number
   skip?: number
 }
@@ -69,4 +74,28 @@ export const taskService = {
 
   logTime: (taskId: string, payload: { hours: number; description?: string; date: string }) =>
     api.post<TimeLog>(`/api/tasks/${taskId}/timelogs`, payload).then((r) => r.data),
+
+  // ── Activity log ────────────────────────────────────────────────────────
+  getActivity: (taskId: string) =>
+    api.get<TaskActivity[]>(`/api/tasks/${taskId}/activity`).then((r) => r.data),
+
+  // ── Saved views ─────────────────────────────────────────────────────────
+  getSavedViews: () =>
+    api.get<SavedTaskView[]>('/api/tasks/views/saved').then((r) => r.data),
+
+  createSavedView: (payload: { name: string; filters: Record<string, string | undefined>; is_default?: boolean }) =>
+    api.post<SavedTaskView>('/api/tasks/views/saved', payload).then((r) => r.data),
+
+  updateSavedView: (viewId: string, payload: Partial<{ name: string; filters: Record<string, string | undefined>; is_default: boolean; position: number }>) =>
+    api.patch<SavedTaskView>(`/api/tasks/views/saved/${viewId}`, payload).then((r) => r.data),
+
+  deleteSavedView: (viewId: string) =>
+    api.delete(`/api/tasks/views/saved/${viewId}`).then((r) => r.data),
+
+  // ── Epics ───────────────────────────────────────────────────────────────────
+  getEpicChildren: (epicId: string, filters?: { status?: string; priority?: string }) =>
+    api.get<Task[]>(`/api/tasks/${epicId}/children`, { params: filters }).then((r) => r.data),
+
+  getEpicProgress: (epicId: string) =>
+    api.get<EpicProgress>(`/api/tasks/${epicId}/progress`).then((r) => r.data),
 }

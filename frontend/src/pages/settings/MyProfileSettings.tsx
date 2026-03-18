@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Camera, Eye, EyeOff, Lock } from 'lucide-react'
+import { Camera, Eye, EyeOff, Lock, MonitorX } from 'lucide-react'
 
 import { settingsService } from '@/services/settings.service'
 import { authService }     from '@/services/auth.service'
@@ -32,7 +32,8 @@ type ProfileForm   = z.infer<typeof profileSchema>
 type PasswordForm  = z.infer<typeof passwordSchema>
 
 const inputCls = cn(
-  'w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm',
+  'w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm',
+  'bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
   'focus:outline-none focus:ring-2 focus:ring-blue-500',
 )
 
@@ -115,6 +116,12 @@ const MyProfileSettings = () => {
     onError: (err: any) => toast.error(err?.response?.data?.detail ?? 'Incorrect current password'),
   })
 
+  const { mutate: logoutAll, isPending: signingOutAll } = useMutation({
+    mutationFn: authService.logoutAll,
+    onSuccess: () => toast.success('All other sessions signed out'),
+    onError: (err: any) => toast.error(err?.response?.data?.detail ?? 'Failed'),
+  })
+
   const displayAvatar = avatarPreview ?? user?.avatar_url
   const initials      = user
     ? `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase()
@@ -124,11 +131,11 @@ const MyProfileSettings = () => {
     <div className="space-y-8 max-w-2xl">
       {/* ── Avatar ──────────────────────────────────────────────── */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-4">Profile Picture</h3>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">Profile Picture</h3>
         <div className="flex items-center gap-5">
           <div className="relative group">
             <div
-              className="w-20 h-20 rounded-full overflow-hidden cursor-pointer ring-2 ring-gray-200 ring-offset-2"
+              className="w-20 h-20 rounded-full overflow-hidden cursor-pointer ring-2 ring-gray-200 dark:ring-gray-700 ring-offset-2 dark:ring-offset-gray-900"
               onClick={() => fileRef.current?.click()}
             >
               {displayAvatar ? (
@@ -159,52 +166,52 @@ const MyProfileSettings = () => {
               Change photo
             </button>
             {avatarFile && (
-              <p className="text-xs text-gray-500 mt-1">
-                {avatarFile.name} — click Save to upload
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {avatarFile.name} -- click Save to upload
               </p>
             )}
-            <p className="text-xs text-gray-400 mt-1">JPG, PNG or GIF. Max 2MB.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">JPG, PNG or GIF. Max 2MB.</p>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-gray-100" />
+      <div className="border-t border-gray-100 dark:border-gray-700" />
 
       {/* ── Personal info ────────────────────────────────────────── */}
       <form onSubmit={handleProfile((d) => saveProfile(d))} className="space-y-5">
-        <h3 className="text-sm font-semibold text-gray-800">Personal Information</h3>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Personal Information</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">First Name</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">First Name</label>
             <input {...regProfile('first_name')} className={inputCls} />
             {profileErrors.first_name && (
               <p className="text-xs text-red-500 mt-0.5">{profileErrors.first_name.message}</p>
             )}
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Last Name</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Last Name</label>
             <input {...regProfile('last_name')} className={inputCls} />
             {profileErrors.last_name && (
               <p className="text-xs text-red-500 mt-0.5">{profileErrors.last_name.message}</p>
             )}
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Email</label>
             <input
               type="email"
               value={user?.email ?? ''}
               disabled
-              className={cn(inputCls, 'bg-gray-50 text-gray-400 cursor-not-allowed')}
+              className={cn(inputCls, 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed')}
             />
-            <p className="text-xs text-gray-400 mt-0.5">Email cannot be changed here.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Email cannot be changed here.</p>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Phone</label>
             <input {...regProfile('phone')} className={inputCls} />
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Bio</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Bio</label>
           <textarea
             rows={3}
             {...regProfile('bio')}
@@ -226,16 +233,16 @@ const MyProfileSettings = () => {
         </div>
       </form>
 
-      <div className="border-t border-gray-100" />
+      <div className="border-t border-gray-100 dark:border-gray-700" />
 
       {/* ── Change password ──────────────────────────────────────── */}
       <form onSubmit={handlePwd((d) => changePwd(d))} className="space-y-4">
         <div className="flex items-center gap-2 mb-4">
-          <Lock size={15} className="text-gray-500" />
-          <h3 className="text-sm font-semibold text-gray-800">Change Password</h3>
+          <Lock size={15} className="text-gray-500 dark:text-gray-400" />
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Change Password</h3>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Current Password</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Current Password</label>
           <div className="relative">
             <input
               type={showOld ? 'text' : 'password'}
@@ -245,7 +252,7 @@ const MyProfileSettings = () => {
             <button
               type="button"
               onClick={() => setShowOld((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
               {showOld ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
@@ -256,7 +263,7 @@ const MyProfileSettings = () => {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">New Password</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">New Password</label>
             <div className="relative">
               <input
                 type={showNew ? 'text' : 'password'}
@@ -266,7 +273,7 @@ const MyProfileSettings = () => {
               <button
                 type="button"
                 onClick={() => setShowNew((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
@@ -276,7 +283,7 @@ const MyProfileSettings = () => {
             )}
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Confirm New Password</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Confirm New Password</label>
             <div className="relative">
               <input
                 type={showConfirm ? 'text' : 'password'}
@@ -286,7 +293,7 @@ const MyProfileSettings = () => {
               <button
                 type="button"
                 onClick={() => setShowConfirm((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
@@ -302,6 +309,26 @@ const MyProfileSettings = () => {
           </Button>
         </div>
       </form>
+
+      {/* ── Session Management ──────────────────────────────────── */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1 flex items-center gap-2">
+          <MonitorX size={15} className="text-red-500" />
+          Active Sessions
+        </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          Revoke all other active sessions across devices. Your current session will remain active.
+        </p>
+        <Button
+          variant="secondary"
+          onClick={() => logoutAll()}
+          disabled={signingOutAll}
+          loading={signingOutAll}
+          className="border-red-200 dark:border-red-800 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+        >
+          Sign out all other devices
+        </Button>
+      </div>
     </div>
   )
 }

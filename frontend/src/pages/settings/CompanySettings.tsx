@@ -45,7 +45,8 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 const inputCls = cn(
-  'w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm',
+  'w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm',
+  'bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
   'focus:outline-none focus:ring-2 focus:ring-blue-500',
 )
 
@@ -128,7 +129,7 @@ const CompanySettings = () => {
     return (
       <div className="space-y-4 max-w-2xl">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />
+          <div key={i} className="h-10 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />
         ))}
       </div>
     )
@@ -138,13 +139,13 @@ const CompanySettings = () => {
     <form onSubmit={handleSubmit((d) => save(d))} className="space-y-8 max-w-2xl">
       {/* ── Logo ────────────────────────────────────────────────── */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-4">Company Logo</h3>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-4">Company Logo</h3>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+          <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-gray-800">
             {data?.logo_url ? (
               <img src={data.logo_url} alt="logo" className="w-full h-full object-contain p-1" />
             ) : (
-              <Building2 size={24} className="text-gray-300" />
+              <Building2 size={24} className="text-gray-300 dark:text-gray-600" />
             )}
           </div>
           <input
@@ -164,83 +165,83 @@ const CompanySettings = () => {
           >
             Upload Logo
           </Button>
-          <p className="text-xs text-gray-400">PNG, SVG recommended. Max 1MB.</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">PNG, SVG recommended. Max 1MB.</p>
         </div>
       </div>
 
-      <div className="border-t border-gray-100" />
+      <div className="border-t border-gray-100 dark:border-gray-700" />
 
       {/* ── Company info ─────────────────────────────────────────── */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-4">Company Information</h3>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-4">Company Information</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Company Name *</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Company Name *</label>
             <input {...register('name')} className={inputCls} />
             {errors.name && <p className="text-xs text-red-500 mt-0.5">{errors.name.message}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Industry</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Industry</label>
             <select {...register('industry')} className={inputCls}>
               <option value="">Select industry</option>
               {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Company Size</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Company Size</label>
             <select {...register('size')} className={inputCls}>
               <option value="">Select size</option>
               {COMPANY_SIZES.map((s) => <option key={s} value={s}>{s} employees</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Founded Year</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Founded Year</label>
             <input type="number" min="1800" max={new Date().getFullYear()} {...register('founded_year')} className={inputCls} />
           </div>
         </div>
       </div>
 
-      <div className="border-t border-gray-100" />
+      <div className="border-t border-gray-100 dark:border-gray-700" />
 
       {/* ── Address ──────────────────────────────────────────────── */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-4">Address</h3>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-4">Address</h3>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Street Address</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Street Address</label>
             <input {...register('address')} className={inputCls} />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">City</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">City</label>
               <input {...register('city')} className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">State</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">State</label>
               <input {...register('state')} className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Country</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Country</label>
               <input {...register('country')} className={inputCls} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-gray-100" />
+      <div className="border-t border-gray-100 dark:border-gray-700" />
 
       {/* ── Work schedule ────────────────────────────────────────── */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-4">Work Schedule</h3>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-4">Work Schedule</h3>
         <div className="space-y-5">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Timezone *</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Timezone *</label>
             <select {...register('timezone')} className={cn(inputCls, 'max-w-xs')}>
               {TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-2">Working Days</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">Working Days</label>
             <div className="flex gap-2">
               {DAY_LABELS.map((label, i) => (
                 <button
@@ -251,7 +252,7 @@ const CompanySettings = () => {
                     'w-10 h-10 rounded-lg text-xs font-semibold border-2 transition-all',
                     workingDays.includes(i)
                       ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300',
+                      : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-600 hover:border-blue-300',
                   )}
                 >
                   {label}
@@ -261,19 +262,19 @@ const CompanySettings = () => {
           </div>
           <div className="flex items-center gap-6">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Work Start Time</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Work Start Time</label>
               <input type="time" {...register('work_start_time')} className={cn(inputCls, 'w-36')} />
             </div>
-            <div className="text-gray-400 text-sm mt-5">to</div>
+            <div className="text-gray-400 dark:text-gray-500 text-sm mt-5">to</div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Work End Time</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Work End Time</label>
               <input type="time" {...register('work_end_time')} className={cn(inputCls, 'w-36')} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end pt-2 border-t border-gray-100">
+      <div className="flex justify-end pt-2 border-t border-gray-100 dark:border-gray-700">
         <Button type="submit" loading={saving}>
           Save Company Settings
         </Button>

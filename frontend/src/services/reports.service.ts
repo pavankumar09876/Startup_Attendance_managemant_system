@@ -171,4 +171,80 @@ export const reportsService = {
     api
       .get(`/api/reports/${type}/export-pdf`, { params, responseType: 'blob' })
       .then((r) => r.data as Blob),
+
+  // ── Analytics endpoints ──────────────────────────────────────────────────
+  getWorkforceDemographics: () =>
+    api.get<WorkforceDemographicsData>('/api/reports/workforce-demographics').then((r) => r.data),
+
+  getHeadcountTrend: (months?: number) =>
+    api.get<HeadcountTrendPoint[]>('/api/reports/headcount-trend', { params: { months } }).then((r) => r.data),
+
+  getLeaveAnalytics: (year?: number) =>
+    api.get<LeaveAnalyticsData>('/api/reports/leave-analytics', { params: { year } }).then((r) => r.data),
+
+  getExpenseAnalytics: (year?: number) =>
+    api.get<ExpenseAnalyticsData>('/api/reports/expense-analytics', { params: { year } }).then((r) => r.data),
+
+  getPayrollAnalytics: (year?: number) =>
+    api.get<PayrollAnalyticsData>('/api/reports/payroll-analytics', { params: { year } }).then((r) => r.data),
+
+  getTaskAnalytics: () =>
+    api.get<TaskAnalyticsData>('/api/reports/task-analytics').then((r) => r.data),
+}
+
+// ── Analytics Types ────────────────────────────────────────────────────────
+export interface WorkforceDemographicsData {
+  total_active: number
+  by_department: Record<string, number>
+  by_role: Record<string, number>
+  by_designation: Record<string, number>
+}
+
+export interface HeadcountTrendPoint {
+  month: string
+  headcount: number
+  new_joiners: number
+}
+
+export interface LeaveAnalyticsData {
+  year: number
+  total_requests: number
+  approved: number
+  rejected: number
+  pending: number
+  approval_rate: number
+  by_type: Record<string, number>
+  monthly_trend: Record<string, number>
+}
+
+export interface ExpenseAnalyticsData {
+  year: number
+  total_submitted: number
+  total_approved: number
+  count: number
+  by_category: Record<string, number>
+  monthly_trend: Record<string, number>
+}
+
+export interface PayrollAnalyticsData {
+  year: number
+  total_gross: number
+  total_net: number
+  total_deductions: number
+  deduction_breakdown: {
+    epf: number
+    esi: number
+    tds: number
+    professional_tax: number
+  }
+  monthly_trend: Record<string, { gross: number; net: number; deductions: number }>
+}
+
+export interface TaskAnalyticsData {
+  total: number
+  completed: number
+  overdue: number
+  completion_rate: number
+  by_status: Record<string, number>
+  by_priority: Record<string, number>
 }

@@ -27,9 +27,14 @@ class AttendanceOut(BaseModel):
     date: date
     check_in: Optional[time] = None
     check_out: Optional[time] = None
+    break_start: Optional[time] = None
+    break_end: Optional[time] = None
+    break_minutes: Optional[Decimal] = None
+    on_break: bool = False
     status: AttendanceStatus
     working_hours: Optional[Decimal] = None
     overtime_hours: Optional[Decimal] = None
+    shift_id: Optional[UUID4] = None
     notes: Optional[str] = None
     created_at: datetime
 
@@ -45,3 +50,23 @@ class AttendanceSummary(BaseModel):
     half_day: int
     on_leave: int
     avg_working_hours: float
+
+
+class TeamAttendanceRecord(AttendanceOut):
+    employee_name: str
+    employee_avatar: Optional[str] = None
+    department: str = ""
+
+
+class TeamAttendanceSummary(BaseModel):
+    total: int
+    present: int
+    absent: int
+    late: int
+    wfh: int
+
+
+class PaginatedTeamAttendance(BaseModel):
+    records: list[TeamAttendanceRecord]
+    summary: TeamAttendanceSummary
+    total: int

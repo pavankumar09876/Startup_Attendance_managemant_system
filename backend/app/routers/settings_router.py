@@ -20,11 +20,10 @@ from app.schemas.settings import (
     RolePermissionsOut, RolePermissionsUpdate, ModulePermissions,
     NotificationPrefOut, NotificationPrefUpdate,
 )
-from app.utils.dependencies import get_current_user, require_roles
+from app.utils.dependencies import get_current_user, require_roles, require_permission
+from app.utils.audit import log_action
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
-
-ADMIN_ROLES = (Role.SUPER_ADMIN, Role.ADMIN, Role.HR)
 MODULES = ["attendance", "leave", "projects", "tasks", "staff", "payroll", "reports", "settings"]
 
 
@@ -44,7 +43,7 @@ async def _get_or_create_singleton(db: AsyncSession, Model):
 @router.get("/company", response_model=CompanySettingsOut)
 async def get_company(
     db: AsyncSession = Depends(get_db),
-    _:  User = Depends(require_roles(*ADMIN_ROLES)),
+    _:  User = Depends(require_permission("settings:company")),
 ):
     return await _get_or_create_singleton(db, CompanySettings)
 
@@ -53,11 +52,16 @@ async def get_company(
 async def update_company(
     payload: CompanySettingsUpdate,
     db:      AsyncSession = Depends(get_db),
-    _:       User = Depends(require_roles(*ADMIN_ROLES)),
+    current_user: User = Depends(require_permission("settings:company")),
 ):
     obj = await _get_or_create_singleton(db, CompanySettings)
-    for k, v in payload.model_dump(exclude_none=True).items():
+    changed = payload.model_dump(exclude_none=True)
+    for k, v in changed.items():
         setattr(obj, k, v)
+    await log_action(
+        db, current_user, "settings.company_updated", "CompanySettings", None,
+        description=f"Updated company settings: {', '.join(changed.keys())}",
+    )
     await db.commit()
     await db.refresh(obj)
     return obj
@@ -67,7 +71,7 @@ async def update_company(
 async def upload_logo(
     file: UploadFile = File(...),
     db:   AsyncSession = Depends(get_db),
-    _:    User = Depends(require_roles(*ADMIN_ROLES)),
+    _:    User = Depends(require_permission("settings:company")),
 ):
     obj = await _get_or_create_singleton(db, CompanySettings)
     upload_dir = "uploads/logos"
@@ -86,7 +90,7 @@ async def upload_logo(
 @router.get("/attendance", response_model=AttendanceConfigOut)
 async def get_attendance_config(
     db: AsyncSession = Depends(get_db),
-    _:  User = Depends(require_roles(*ADMIN_ROLES)),
+    _:  User = Depends(require_permission("settings:attendance")),
 ):
     return await _get_or_create_singleton(db, AttendanceConfig)
 
@@ -95,11 +99,16 @@ async def get_attendance_config(
 async def update_attendance_config(
     payload: AttendanceConfigUpdate,
     db:      AsyncSession = Depends(get_db),
-    _:       User = Depends(require_roles(*ADMIN_ROLES)),
+    current_user: User = Depends(require_permission("settings:attendance")),
 ):
     obj = await _get_or_create_singleton(db, AttendanceConfig)
-    for k, v in payload.model_dump(exclude_none=True).items():
+    changed = payload.model_dump(exclude_none=True)
+    for k, v in changed.items():
         setattr(obj, k, v)
+    await log_action(
+        db, current_user, "settings.attendance_updated", "AttendanceConfig", None,
+        description=f"Updated attendance config: {', '.join(changed.keys())}",
+    )
     await db.commit()
     await db.refresh(obj)
     return obj
@@ -119,10 +128,14 @@ async def list_leave_types(
 async def create_leave_type(
     payload: LeavePolicyCreate,
     db:      AsyncSession = Depends(get_db),
-    _:       User = Depends(require_roles(*ADMIN_ROLES)),
+    current_user: User = Depends(require_permission("settings:leave")),
 ):
     obj = LeavePolicy(**payload.model_dump())
     db.add(obj)
+    await log_action(
+        db, current_user, "settings.leave_type_created", "LeavePolicy", None,
+        description=f"Created leave type: {payload.name}",
+    )
     await db.commit()
     await db.refresh(obj)
     return obj
@@ -133,14 +146,19 @@ async def update_leave_type(
     policy_id: uuid.UUID,
     payload:   LeavePolicyUpdate,
     db:        AsyncSession = Depends(get_db),
-    _:         User = Depends(require_roles(*ADMIN_ROLES)),
+    current_user: User = Depends(require_permission("settings:leave")),
 ):
     result = await db.execute(select(LeavePolicy).where(LeavePolicy.id == policy_id))
     obj = result.scalar_one_or_none()
     if not obj:
         raise HTTPException(404, "Leave type not found")
-    for k, v in payload.model_dump(exclude_none=True).items():
+    changed = payload.model_dump(exclude_none=True)
+    for k, v in changed.items():
         setattr(obj, k, v)
+    await log_action(
+        db, current_user, "settings.leave_type_updated", "LeavePolicy", str(policy_id),
+        description=f"Updated leave type {obj.name}: {', '.join(changed.keys())}",
+    )
     await db.commit()
     await db.refresh(obj)
     return obj
@@ -150,12 +168,16 @@ async def update_leave_type(
 async def delete_leave_type(
     policy_id: uuid.UUID,
     db:        AsyncSession = Depends(get_db),
-    _:         User = Depends(require_roles(*ADMIN_ROLES)),
+    current_user: User = Depends(require_permission("settings:leave")),
 ):
     result = await db.execute(select(LeavePolicy).where(LeavePolicy.id == policy_id))
     obj = result.scalar_one_or_none()
     if not obj:
         raise HTTPException(404, "Leave type not found")
+    await log_action(
+        db, current_user, "settings.leave_type_deleted", "LeavePolicy", str(policy_id),
+        description=f"Deleted leave type: {obj.name}",
+    )
     await db.delete(obj)
     await db.commit()
 
@@ -165,7 +187,7 @@ async def delete_leave_type(
 async def get_permissions(
     role: str,
     db:   AsyncSession = Depends(get_db),
-    _:    User = Depends(require_roles(Role.SUPER_ADMIN)),
+    _:    User = Depends(require_permission("settings:roles")),
 ):
     result = await db.execute(
         select(RolePermission).where(RolePermission.role == role)
@@ -191,7 +213,7 @@ async def update_permissions(
     role:    str,
     payload: RolePermissionsUpdate,
     db:      AsyncSession = Depends(get_db),
-    _:       User = Depends(require_roles(Role.SUPER_ADMIN)),
+    current_user: User = Depends(require_permission("settings:roles")),
 ):
     for module, mp in payload.permissions.items():
         result = await db.execute(
@@ -213,9 +235,13 @@ async def update_permissions(
                 can_view=mp.view, can_create=mp.create,
                 can_edit=mp.edit, can_delete=mp.delete, can_approve=mp.approve,
             ))
+    await log_action(
+        db, current_user, "settings.permissions_updated", "RolePermission", None,
+        description=f"Updated permissions for role '{role}': modules {list(payload.permissions.keys())}",
+    )
     await db.commit()
 
-    return await get_permissions(role, db, _)
+    return await get_permissions(role, db, current_user)
 
 
 # ── Notification preferences ──────────────────────────────────────────────────
@@ -259,3 +285,140 @@ async def update_notif_prefs(
     await db.commit()
     await db.refresh(obj)
     return obj
+
+
+# ── Custom Roles CRUD ────────────────────────────────────────────────────────
+from app.models.permission import CustomRole, PERMISSIONS
+import json as _json
+
+@router.get("/custom-roles")
+async def list_custom_roles(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_permission("settings:roles")),
+):
+    result = await db.execute(select(CustomRole).where(CustomRole.is_active == True))
+    roles = result.scalars().all()
+    return [
+        {
+            "id": str(r.id),
+            "name": r.name,
+            "display_name": r.display_name,
+            "description": r.description,
+            "permissions": _json.loads(r.permissions) if r.permissions else [],
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in roles
+    ]
+
+
+@router.get("/available-permissions")
+async def list_available_permissions(
+    _: User = Depends(require_permission("settings:roles")),
+):
+    """Return all available permission codes grouped by module."""
+    grouped: dict = {}
+    for code, (module, action, desc) in PERMISSIONS.items():
+        grouped.setdefault(module, []).append({"code": code, "action": action, "description": desc})
+    return grouped
+
+
+@router.post("/custom-roles", status_code=201)
+async def create_custom_role(
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("settings:roles")),
+):
+    name = payload.get("name", "").strip().lower().replace(" ", "_")
+    display_name = payload.get("display_name", name)
+    description = payload.get("description")
+    permissions = payload.get("permissions", [])
+
+    if not name:
+        raise HTTPException(400, "Role name is required")
+
+    # Validate permission codes
+    valid_codes = set(PERMISSIONS.keys())
+    invalid = [p for p in permissions if p not in valid_codes]
+    if invalid:
+        raise HTTPException(400, f"Invalid permissions: {invalid}")
+
+    # Check duplicate
+    existing = (await db.execute(select(CustomRole).where(CustomRole.name == name))).scalar_one_or_none()
+    if existing:
+        raise HTTPException(400, f"Role '{name}' already exists")
+
+    role = CustomRole(
+        name=name,
+        display_name=display_name,
+        description=description,
+        permissions=_json.dumps(permissions),
+        created_by=current_user.id,
+    )
+    db.add(role)
+    await log_action(
+        db, current_user, "settings.custom_role_created", "CustomRole", None,
+        description=f"Created custom role: {display_name}",
+    )
+    await db.commit()
+    await db.refresh(role)
+    return {
+        "id": str(role.id),
+        "name": role.name,
+        "display_name": role.display_name,
+        "permissions": permissions,
+    }
+
+
+@router.patch("/custom-roles/{role_id}")
+async def update_custom_role(
+    role_id: uuid.UUID,
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("settings:roles")),
+):
+    result = await db.execute(select(CustomRole).where(CustomRole.id == role_id))
+    role = result.scalar_one_or_none()
+    if not role:
+        raise HTTPException(404, "Custom role not found")
+
+    if "display_name" in payload:
+        role.display_name = payload["display_name"]
+    if "description" in payload:
+        role.description = payload["description"]
+    if "permissions" in payload:
+        valid_codes = set(PERMISSIONS.keys())
+        invalid = [p for p in payload["permissions"] if p not in valid_codes]
+        if invalid:
+            raise HTTPException(400, f"Invalid permissions: {invalid}")
+        role.permissions = _json.dumps(payload["permissions"])
+
+    await log_action(
+        db, current_user, "settings.custom_role_updated", "CustomRole", str(role_id),
+        description=f"Updated custom role: {role.display_name}",
+    )
+    await db.commit()
+    await db.refresh(role)
+    return {
+        "id": str(role.id),
+        "name": role.name,
+        "display_name": role.display_name,
+        "permissions": _json.loads(role.permissions),
+    }
+
+
+@router.delete("/custom-roles/{role_id}", status_code=204)
+async def delete_custom_role(
+    role_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("settings:roles")),
+):
+    result = await db.execute(select(CustomRole).where(CustomRole.id == role_id))
+    role = result.scalar_one_or_none()
+    if not role:
+        raise HTTPException(404, "Custom role not found")
+    role.is_active = False
+    await log_action(
+        db, current_user, "settings.custom_role_deleted", "CustomRole", str(role_id),
+        description=f"Deactivated custom role: {role.display_name}",
+    )
+    await db.commit()

@@ -7,11 +7,12 @@ import toast from 'react-hot-toast'
 import { ArrowRight, ArrowLeft, CheckCircle2, Search, X, UserPlus } from 'lucide-react'
 
 import { projectService } from '@/services/project.service'
-import type { ProjectPriority, ProjectStatus } from '@/types/project.types'
+import type { ProjectPriority, ProjectStatus, ProjectRoleType } from '@/types/project.types'
 import { userService } from '@/services/user.service'
 import Modal from '@/components/common/Modal'
 import Button from '@/components/common/Button'
 import Avatar from '@/components/common/Avatar'
+import DatePicker from '@/components/common/DatePicker'
 import { cn } from '@/utils/cn'
 
 // ── Schema ─────────────────────────────────────────────────────────────────────
@@ -33,7 +34,7 @@ const schema = z
 
 type FormData = z.infer<typeof schema>
 
-interface Member { id: string; name: string; role_in_project: string }
+interface Member { id: string; name: string; role_in_project: ProjectRoleType }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
@@ -52,13 +53,13 @@ const StepIndicator = ({ current }: { current: number }) => (
         <div key={s} className="flex items-center gap-2">
           <div className={cn(
             'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
-            current >= s ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500',
+            current >= s ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400',
           )}>
             {current > s ? <CheckCircle2 size={14} /> : s}
           </div>
           <span className={cn(
             'text-xs font-medium hidden sm:block',
-            current >= s ? 'text-blue-600' : 'text-gray-400',
+            current >= s ? 'text-blue-600' : 'text-gray-400 dark:text-gray-500',
           )}>
             {label}
           </span>
@@ -78,11 +79,11 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
   const today                   = new Date().toISOString().split('T')[0]
 
   const {
-    register, control, handleSubmit, watch, reset,
+    register, control, handleSubmit, watch, reset, trigger,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { status: 'planning', priority: 'medium' },
+    defaultValues: { status: 'planning', priority: 'medium', start_date: '', end_date: '' },
   })
 
   const watchedStart = watch('start_date')
@@ -118,12 +119,22 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
     onClose()
   }
 
-  const goNext = handleSubmit(() => setStep((s) => (s + 1) as 1 | 2 | 3))
+  const STEP_FIELDS: Record<number, (keyof FormData)[]> = {
+    1: ['name', 'status'],
+    2: ['start_date', 'end_date', 'priority'],
+  }
+
+  const goNext = async () => {
+    const fields = STEP_FIELDS[step]
+    const valid = fields ? await trigger(fields) : true
+    if (valid) setStep((s) => (s + 1) as 1 | 2 | 3)
+  }
+
   const onSubmit = handleSubmit((data) => mutate(data))
 
   const addMember = (id: string, name: string) => {
     if (members.find((m) => m.id === id)) return
-    setMembers((prev) => [...prev, { id, name, role_in_project: 'member' }])
+    setMembers((prev) => [...prev, { id, name, role_in_project: 'contributor' }])
   }
 
   const removeMember = (id: string) =>
@@ -131,7 +142,7 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
 
   const updateMemberRole = (id: string, role: string) =>
     setMembers((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, role_in_project: role } : m)),
+      prev.map((m) => (m.id === id ? { ...m, role_in_project: role as ProjectRoleType } : m)),
     )
 
   const filteredEmployees = useMemo(
@@ -148,7 +159,7 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
         <div className="space-y-4">
           {/* Project name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Project Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -156,8 +167,10 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
               placeholder="e.g. Website Redesign"
               className={cn(
                 'w-full px-3 py-2.5 rounded-lg border text-sm',
+                'bg-white dark:bg-gray-900 text-gray-900 dark:text-white',
+                'placeholder:text-gray-400 dark:placeholder:text-gray-500',
                 'focus:outline-none focus:ring-2 focus:ring-blue-500',
-                errors.name ? 'border-red-400' : 'border-gray-300',
+                errors.name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600',
               )}
             />
             {errors.name && (
@@ -167,25 +180,27 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
 
           {/* Client name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Client Name
             </label>
             <input
               {...register('client_name')}
               placeholder="e.g. Acme Corp"
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Status
             </label>
             <select
               {...register('status')}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="planning">Planning</option>
@@ -196,15 +211,16 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Description
             </label>
             <textarea
               {...register('description')}
               rows={3}
               placeholder="Brief description of the project…"
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm resize-none
-                focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm resize-none
+                bg-white dark:bg-gray-900 text-gray-900 dark:text-white
+                focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:placeholder-gray-500"
             />
           </div>
 
@@ -229,37 +245,23 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
           {/* Date range */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
                 Start Date <span className="text-red-500">*</span>
               </label>
-              <input
-                type="date"
-                min={today}
-                {...register('start_date')}
-                className={cn(
-                  'w-full px-3 py-2.5 rounded-lg border text-sm',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500',
-                  errors.start_date ? 'border-red-400' : 'border-gray-300',
-                )}
-              />
+              <Controller name="start_date" control={control} render={({ field }) => (
+                <DatePicker value={field.value ?? ''} onChange={field.onChange} min={today} error={!!errors.start_date} placeholder="Start date" />
+              )} />
               {errors.start_date && (
                 <p className="mt-1 text-xs text-red-500">{errors.start_date.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
                 End Date <span className="text-red-500">*</span>
               </label>
-              <input
-                type="date"
-                min={watchedStart || today}
-                {...register('end_date')}
-                className={cn(
-                  'w-full px-3 py-2.5 rounded-lg border text-sm',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500',
-                  errors.end_date ? 'border-red-400' : 'border-gray-300',
-                )}
-              />
+              <Controller name="end_date" control={control} render={({ field }) => (
+                <DatePicker value={field.value ?? ''} onChange={field.onChange} min={watchedStart || today} error={!!errors.end_date} placeholder="End date" />
+              )} />
               {errors.end_date && (
                 <p className="mt-1 text-xs text-red-500">{errors.end_date.message}</p>
               )}
@@ -268,7 +270,7 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
 
           {/* Priority */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Priority
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -282,7 +284,7 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
                         : p === 'high' ? 'bg-amber-500 text-white border-amber-500'
                           : p === 'medium' ? 'bg-blue-600 text-white border-blue-600'
                             : 'bg-gray-600 text-white border-gray-600'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300',
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600',
                   )}>
                     {p}
                   </div>
@@ -293,11 +295,11 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
 
           {/* Budget */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Budget (₹)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm font-medium">
                 ₹
               </span>
               <input
@@ -306,7 +308,8 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
                 step="1000"
                 {...register('budget')}
                 placeholder="0"
-                className="w-full pl-7 pr-3 py-2.5 rounded-lg border border-gray-300 text-sm
+                className="w-full pl-7 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                  bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                   focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -337,17 +340,18 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
         <div className="space-y-4">
           {/* Search employees */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Add Team Members
             </label>
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 value={memberSearch}
                 onChange={(e) => setMemberSearch(e.target.value)}
                 placeholder="Search by name or email…"
-                className="w-full pl-8 pr-3 py-2.5 rounded-lg border border-gray-300 text-sm
+                className="w-full pl-8 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                  bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                   focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -355,20 +359,20 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
 
           {/* Search results */}
           {filteredEmployees.length > 0 && (
-            <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-36 overflow-y-auto">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-700 max-h-36 overflow-y-auto">
               {filteredEmployees.map((emp: any) => (
                 <button
                   key={emp.id}
                   type="button"
                   onClick={() => addMember(emp.id, emp.full_name ?? emp.email)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
                 >
                   <Avatar name={emp.full_name ?? emp.email} size="sm" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
                       {emp.full_name ?? emp.email}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">{emp.role}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{emp.role}</p>
                   </div>
                   <UserPlus size={14} className="text-blue-500 shrink-0" />
                 </button>
@@ -379,33 +383,34 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
           {/* Added members */}
           {members.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-2">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
                 Team ({members.length})
               </p>
               <div className="space-y-2">
                 {members.map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg"
+                    className="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
                   >
                     <Avatar name={m.name} size="sm" />
-                    <span className="flex-1 text-sm font-medium text-gray-800 truncate">
+                    <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
                       {m.name}
                     </span>
                     <select
                       value={m.role_in_project}
                       onChange={(e) => updateMemberRole(m.id, e.target.value)}
-                      className="text-xs border border-gray-200 rounded px-2 py-1
+                      className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1
+                        bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                         focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      <option value="member">Member</option>
-                      <option value="lead">Lead</option>
-                      <option value="reviewer">Reviewer</option>
+                      <option value="contributor">Contributor</option>
+                      <option value="manager">Manager</option>
+                      <option value="viewer">Viewer</option>
                     </select>
                     <button
                       type="button"
                       onClick={() => removeMember(m.id)}
-                      className="text-gray-400 hover:text-red-500 transition-colors"
+                      className="text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors"
                     >
                       <X size={14} />
                     </button>
@@ -416,7 +421,7 @@ const CreateProjectModal = ({ open, onClose }: Props) => {
           )}
 
           {members.length === 0 && (
-            <p className="text-xs text-gray-400 text-center py-3">
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-3">
               No members added yet — you can skip and add them later.
             </p>
           )}

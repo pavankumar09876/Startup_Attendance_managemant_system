@@ -79,41 +79,40 @@ const Header = ({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void }) => 
         <div className="relative">
           <button
             onClick={() => setDropdownOpen((o) => !o)}
-            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             {user && <Avatar name={fullName} src={user.avatar_url} size="sm" />}
-            <span className="text-sm font-medium text-gray-700 hidden sm:block">{fullName}</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block">{fullName}</span>
             <ChevronDown size={14} className="text-gray-400" />
           </button>
 
           {dropdownOpen && (
             <>
-              {/* Close on outside click */}
               <div
                 className="fixed inset-0 z-10"
                 onClick={() => setDropdownOpen(false)}
               />
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="text-sm font-medium text-gray-900">{fullName}</p>
-                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-20 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{fullName}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                 </div>
                 <button
                   onClick={() => { navigate(ROUTES.PROFILE); setDropdownOpen(false) }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   <User size={15} /> Profile
                 </button>
                 <button
                   onClick={() => { navigate(ROUTES.SETTINGS); setDropdownOpen(false) }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   <Settings size={15} /> Settings
                 </button>
-                <div className="border-t border-gray-100">
+                <div className="border-t border-gray-100 dark:border-gray-700">
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     <LogOut size={15} /> Logout
                   </button>

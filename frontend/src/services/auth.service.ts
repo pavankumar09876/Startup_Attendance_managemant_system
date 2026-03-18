@@ -8,6 +8,9 @@ export const authService = {
   logout: () =>
     api.post('/api/auth/logout').then((r) => r.data),
 
+  logoutAll: () =>
+    api.post('/api/auth/logout-all').then((r) => r.data),
+
   refreshToken: (refresh_token: string) =>
     api.post<TokenResponse>('/api/auth/refresh', { refresh_token }).then((r) => r.data),
 

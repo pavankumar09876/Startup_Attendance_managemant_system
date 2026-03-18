@@ -4,51 +4,34 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
   ChevronDown, ChevronRight, Play, CheckCircle2, Zap, Calendar, Target,
+  AlertTriangle, Users,
 } from 'lucide-react'
 import { sprintService } from '@/services/sprint.service'
 import type { Sprint, Task, TaskStatus, ProjectMember } from '@/types/project.types'
+import { SPRINT_STATUS_KEYS, STATUS_LABEL_MAP, STATUS_COUNT_COLOR_MAP } from '@/config/taskStatuses'
 import { cn } from '@/utils/cn'
 import TaskCard from '@/pages/tasks/TaskCard'
 import TaskDetailModal from '@/pages/tasks/TaskDetailModal'
 import CreateTaskModal from '@/pages/tasks/CreateTaskModal'
 import CompleteSprintModal from './CompleteSprintModal'
+import SprintWorkloadPanel from './SprintWorkloadPanel'
 import { formatDate } from '@/utils/formatDate'
-
-const STATUS_COLS: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done']
-
-const STATUS_LABELS: Record<TaskStatus, string> = {
-  todo:        'To Do',
-  in_progress: 'In Progress',
-  in_review:   'In Review',
-  done:        'Done',
-  blocked:     'Blocked',
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  todo:        'bg-gray-100 text-gray-600',
-  in_progress: 'bg-blue-100 text-blue-700',
-  in_review:   'bg-purple-100 text-purple-700',
-  done:        'bg-green-100 text-green-700',
-  blocked:     'bg-red-100 text-red-700',
-}
 
 // ── Droppable column within a sprint ─────────────────────────────────────────
 const SprintColumn = ({
   sprintId,
   status,
   tasks,
-  canManage,
-  members,
-  projectId,
   onOpenTask,
+  selectedIds = new Set(),
+  onToggleSelect,
 }: {
   sprintId: string
   status: TaskStatus
   tasks: Task[]
-  canManage: boolean
-  members: ProjectMember[]
-  projectId: string
   onOpenTask: (t: Task) => void
+  selectedIds?: Set<string>
+  onToggleSelect?: (taskId: string, e: React.MouseEvent) => void
 }) => {
   const droppableId = `${sprintId}::${status}`
   const { setNodeRef, isOver } = useDroppable({ id: droppableId })
@@ -57,23 +40,39 @@ const SprintColumn = ({
     <div
       ref={setNodeRef}
       className={cn(
-        'flex-1 min-w-[200px] rounded-xl p-3 transition-colors',
-        isOver ? 'bg-blue-50 ring-2 ring-blue-300' : 'bg-gray-50',
+        'flex-1 min-w-[200px] rounded-xl p-3 transition-all duration-200',
+        isOver
+          ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-300 scale-[1.01]'
+          : 'bg-gray-50 dark:bg-gray-800',
       )}
     >
       <div className="flex items-center gap-1.5 mb-2">
-        <span className={cn('text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full', STATUS_COLORS[status])}>
-          {STATUS_LABELS[status]}
+        <span className={cn('text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full', STATUS_COUNT_COLOR_MAP[status])}>
+          {STATUS_LABEL_MAP[status]}
         </span>
-        <span className="text-xs text-gray-400">{tasks.length}</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">{tasks.length}</span>
       </div>
       <div className="space-y-2">
         {tasks.map((task) => (
-          <TaskCard
+          <div
             key={task.id}
-            task={task}
-            onClick={() => onOpenTask(task)}
-          />
+            className={cn(
+              'rounded-lg transition-all duration-150',
+              selectedIds.has(task.id) && 'ring-2 ring-blue-400 ring-offset-1',
+            )}
+            onClick={(e) => {
+              if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                onToggleSelect?.(task.id, e)
+              } else {
+                onOpenTask(task)
+              }
+            }}
+          >
+            <TaskCard
+              task={task}
+              onClick={() => {}}
+            />
+          </div>
         ))}
       </div>
     </div>
@@ -89,6 +88,8 @@ interface Props {
   members: ProjectMember[]
   projectId: string
   hasActiveSprint: boolean
+  selectedIds?: Set<string>
+  onToggleSelect?: (taskId: string, e: React.MouseEvent) => void
 }
 
 const SprintSection = ({
@@ -99,11 +100,14 @@ const SprintSection = ({
   members,
   projectId,
   hasActiveSprint,
+  selectedIds = new Set(),
+  onToggleSelect,
 }: Props) => {
   const [collapsed, setCollapsed]         = useState(false)
   const [completeOpen, setCompleteOpen]   = useState(false)
   const [createTaskOpen, setCreateTaskOpen] = useState(false)
   const [detailTask, setDetailTask]       = useState<Task | null>(null)
+  const [showWorkload, setShowWorkload]   = useState(false)
   const queryClient = useQueryClient()
 
   const { mutate: startSprint, isPending: starting } = useMutation({
@@ -135,22 +139,22 @@ const SprintSection = ({
   return (
     <div className={cn(
       'border rounded-xl overflow-hidden',
-      isActive    ? 'border-blue-300 bg-white shadow-sm'
-        : isCompleted ? 'border-gray-200 bg-gray-50 opacity-80'
-          : 'border-gray-200 bg-white',
+      isActive    ? 'border-blue-300 bg-white dark:bg-gray-900 shadow-sm'
+        : isCompleted ? 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-80'
+          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900',
     )}>
       {/* Header */}
       <div
         className="flex items-center gap-3 px-4 py-3 cursor-pointer select-none"
         onClick={() => setCollapsed((c) => !c)}
       >
-        <button className="text-gray-400 hover:text-gray-600 shrink-0">
+        <button className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 shrink-0">
           {collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
         </button>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-gray-800">{sprint.name}</span>
+            <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{sprint.name}</span>
             {isActive && (
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
                 Active
@@ -162,18 +166,18 @@ const SprintSection = ({
               </span>
             )}
             {sprint.goal && (
-              <span className="text-xs text-gray-400 italic truncate max-w-xs">{sprint.goal}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 italic truncate max-w-xs">{sprint.goal}</span>
             )}
           </div>
 
           {/* Metrics row */}
           <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <span className="text-xs text-gray-500 flex items-center gap-1">
+            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
               <Target size={10} />
               {sprint.completed_tasks}/{sprint.total_tasks} tasks
             </span>
             {storyPtsTotal > 0 && (
-              <span className="text-xs text-gray-500 flex items-center gap-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                 <Zap size={10} />
                 {storyPtsUsed}/{storyPtsTotal} pts
                 {sprint.capacity && ` (cap: ${sprint.capacity})`}
@@ -181,14 +185,14 @@ const SprintSection = ({
             )}
             {sprint.days_remaining !== undefined && sprint.days_remaining !== null && (
               <span className={cn('text-xs flex items-center gap-1',
-                sprint.days_remaining <= 2 ? 'text-red-500' : 'text-gray-500',
+                sprint.days_remaining <= 2 ? 'text-red-500' : 'text-gray-500 dark:text-gray-400',
               )}>
                 <Calendar size={10} />
                 {sprint.days_remaining}d left
               </span>
             )}
             {sprint.burn_rate !== undefined && sprint.burn_rate !== null && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {sprint.burn_rate} pts/day
               </span>
             )}
@@ -198,7 +202,7 @@ const SprintSection = ({
               </span>
             )}
             {sprint.start_date && (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-400 dark:text-gray-500">
                 {formatDate(sprint.start_date, 'MMM d')}
                 {sprint.end_date && ` – ${formatDate(sprint.end_date, 'MMM d')}`}
               </span>
@@ -208,11 +212,11 @@ const SprintSection = ({
 
         {/* Progress bar */}
         <div className="w-24 hidden sm:block">
-          <div className="flex items-center justify-between text-[10px] text-gray-400 mb-1">
+          <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 mb-1">
             <span>Progress</span>
             <span>{pct}%</span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-1.5">
+          <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
             <div
               className={cn(
                 'h-1.5 rounded-full transition-all',
@@ -234,7 +238,7 @@ const SprintSection = ({
                 className={cn(
                   'flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors',
                   hasActiveSprint
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                     : 'bg-blue-600 text-white hover:bg-blue-700',
                 )}
               >
@@ -255,7 +259,7 @@ const SprintSection = ({
             {isPlanned && (
               <button
                 onClick={() => deleteSprint()}
-                className="text-xs text-gray-400 hover:text-red-500 transition-colors px-1"
+                className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors px-1"
               >
                 Delete
               </button>
@@ -268,29 +272,64 @@ const SprintSection = ({
                 + Task
               </button>
             )}
+            {(isActive || isPlanned) && (
+              <button
+                onClick={() => setShowWorkload((v) => !v)}
+                title="Team workload"
+                className={cn(
+                  'flex items-center gap-1 text-xs font-medium px-2 py-1.5 rounded-lg transition-colors',
+                  showWorkload
+                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                    : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300',
+                )}
+              >
+                <Users size={11} />
+                Workload
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* Over-capacity warning */}
+      {!collapsed && sprint.over_capacity && (
+        <div className="mx-4 mb-2 flex items-center gap-2 px-3 py-2 rounded-lg
+          bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800
+          text-xs text-red-600 dark:text-red-400">
+          <AlertTriangle size={13} className="shrink-0" />
+          <span>
+            Sprint is <strong>{storyPtsTotal - (sprint.capacity ?? 0)} pts</strong> over capacity
+            ({storyPtsTotal}/{sprint.capacity} pts)
+          </span>
+        </div>
+      )}
+
+      {/* Team workload panel */}
+      {!collapsed && showWorkload && (
+        <div className="mx-4 mb-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700
+          bg-gray-50 dark:bg-gray-800/50">
+          <SprintWorkloadPanel sprintId={sprint.id} capacity={sprint.capacity} />
+        </div>
+      )}
 
       {/* Body */}
       {!collapsed && (
         <div className="px-4 pb-4">
           {tasks.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-6 border-2 border-dashed border-gray-200 rounded-lg">
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-6 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
               No tasks in this sprint. Drag tasks here or create new ones.
             </p>
           ) : (
             <div className="flex gap-3 overflow-x-auto pb-1">
-              {STATUS_COLS.map((status) => (
+              {SPRINT_STATUS_KEYS.map((status) => (
                 <SprintColumn
                   key={status}
                   sprintId={sprint.id}
                   status={status}
                   tasks={tasks.filter((t) => t.status === status)}
-                  canManage={canManage}
-                  members={members}
-                  projectId={projectId}
                   onOpenTask={setDetailTask}
+                  selectedIds={selectedIds}
+                  onToggleSelect={onToggleSelect}
                 />
               ))}
             </div>

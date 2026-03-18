@@ -42,6 +42,7 @@ class SprintOut(BaseModel):
     velocity:      Optional[int]   = None   # completed sprints
     days_remaining: Optional[int]  = None   # active sprints
     burn_rate:     Optional[float] = None   # pts/day, active sprints
+    over_capacity: bool            = False  # True when total_story_points > capacity
 
     class Config:
         from_attributes = True
@@ -49,3 +50,26 @@ class SprintOut(BaseModel):
 
 class CompleteSprintPayload(BaseModel):
     move_incomplete_to_sprint_id: Optional[UUID4] = None   # None → backlog
+
+
+# ── Team workload ─────────────────────────────────────────────────────────────
+
+class MemberWorkload(BaseModel):
+    user_id:         UUID4
+    name:            str
+    avatar:          Optional[str]  = None
+    task_count:      int            = 0
+    story_points:    int            = 0
+    completed_tasks: int            = 0
+    leave_days:      int            = 0
+    available_days:  Optional[int]  = None
+
+
+class SprintWorkloadOut(BaseModel):
+    sprint_id:          UUID4
+    capacity:           Optional[int] = None
+    total_story_points: int           = 0
+    over_capacity:      bool          = False
+    unassigned_points:  int           = 0
+    unassigned_tasks:   int           = 0
+    members:            List[MemberWorkload] = []

@@ -11,6 +11,7 @@ import { reportsService } from '@/services/reports.service'
 import type { AttendanceSummaryRow, HeatmapCell } from '@/services/reports.service'
 import { staffService } from '@/services/staff.service'
 import Button from '@/components/common/Button'
+import DatePicker from '@/components/common/DatePicker'
 import { cn } from '@/utils/cn'
 
 const COLORS = ['#2563EB', '#DC2626', '#D97706', '#16A34A', '#7C3AED', '#0891B2']
@@ -20,8 +21,8 @@ const CELL_COLOR: Record<HeatmapCell['status'], string> = {
   on_time:     'bg-green-500',
   slight_late: 'bg-amber-400',
   very_late:   'bg-red-500',
-  absent:      'bg-gray-200',
-  weekend:     'bg-gray-50 border border-dashed border-gray-200',
+  absent:      'bg-gray-200 dark:bg-gray-600',
+  weekend:     'bg-gray-50 dark:bg-gray-800 border border-dashed border-gray-200 dark:border-gray-600',
 }
 
 const CELL_TOOLTIP: Record<HeatmapCell['status'], string> = {
@@ -132,29 +133,19 @@ const AttendanceReport = () => {
       <div className="card p-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">From</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">From</label>
+            <DatePicker value={startDate} onChange={setStartDate} max={endDate} placeholder="Start date" />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">To</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">To</label>
+            <DatePicker value={endDate} onChange={setEndDate} min={startDate} placeholder="End date" />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Department</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Department</label>
             <select
               value={deptId}
               onChange={(e) => setDeptId(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Departments</option>
               {departments.map((d) => (
@@ -173,7 +164,7 @@ const AttendanceReport = () => {
       {isLoading ? (
         <div className="grid grid-cols-2 gap-5">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="card h-72 animate-pulse bg-gray-50" />
+            <div key={i} className="card h-72 animate-pulse bg-gray-50 dark:bg-gray-800" />
           ))}
         </div>
       ) : (
@@ -182,7 +173,7 @@ const AttendanceReport = () => {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
             {/* Attendance trend */}
             <div className="card p-5">
-              <p className="text-sm font-semibold text-gray-800 mb-4">Attendance Trend (Last 30 Days)</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">Attendance Trend (Last 30 Days)</p>
               <ResponsiveContainer width="100%" height={220}>
                 <AreaChart data={data?.trend ?? []} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                   <defs>
@@ -216,7 +207,7 @@ const AttendanceReport = () => {
 
             {/* Department-wise */}
             <div className="card p-5">
-              <p className="text-sm font-semibold text-gray-800 mb-4">Department-wise Attendance %</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">Department-wise Attendance %</p>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={data?.by_department ?? []} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -237,19 +228,19 @@ const AttendanceReport = () => {
 
           {/* ── Late arrivals heatmap ─────────────────────────── */}
           <div className="card p-5">
-            <p className="text-sm font-semibold text-gray-800 mb-1">Late Arrivals Heatmap</p>
-            <p className="text-xs text-gray-400 mb-4">Each cell = one day. Green = on time · Amber = slightly late · Red = very late · Gray = absent</p>
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">Late Arrivals Heatmap</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Each cell = one day. Green = on time · Amber = slightly late · Red = very late · Gray = absent</p>
             <div className="overflow-x-auto">
               {/* Day labels */}
               <div className="flex gap-1 mb-1 ml-12">
                 {DAY_LABELS.map((d) => (
-                  <div key={d} className="w-7 text-center text-[10px] text-gray-400 font-medium">{d}</div>
+                  <div key={d} className="w-7 text-center text-[10px] text-gray-400 dark:text-gray-500 font-medium">{d}</div>
                 ))}
               </div>
               {heatmapWeeks.length > 0 ? (
                 heatmapWeeks.map((week, wi) => (
                   <div key={wi} className="flex items-center gap-1 mb-1">
-                    <div className="w-10 text-[10px] text-gray-400 text-right pr-1">
+                    <div className="w-10 text-[10px] text-gray-400 dark:text-gray-500 text-right pr-1">
                       {week.find((c) => c)?.date?.slice(5, 10) ?? ''}
                     </div>
                     {week.map((cell, di) => (
@@ -258,21 +249,21 @@ const AttendanceReport = () => {
                         title={cell ? `${cell.date}${cell.arrival_time ? ` — ${cell.arrival_time}` : ''} (${CELL_TOOLTIP[cell.status]})` : ''}
                         className={cn(
                           'w-7 h-7 rounded-sm transition-transform hover:scale-110 cursor-default',
-                          cell ? CELL_COLOR[cell.status] : 'bg-gray-100',
+                          cell ? CELL_COLOR[cell.status] : 'bg-gray-100 dark:bg-gray-800',
                         )}
                       />
                     ))}
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-400 py-4 text-center">No heatmap data for this period.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">No heatmap data for this period.</p>
               )}
               {/* Legend */}
               <div className="flex items-center gap-4 mt-3">
                 {Object.entries(CELL_TOOLTIP).filter(([k]) => k !== 'weekend').map(([status, label]) => (
                   <div key={status} className="flex items-center gap-1.5">
                     <div className={cn('w-3 h-3 rounded-sm', CELL_COLOR[status as HeatmapCell['status']])} />
-                    <span className="text-xs text-gray-500">{label}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
                   </div>
                 ))}
               </div>
@@ -281,22 +272,22 @@ const AttendanceReport = () => {
 
           {/* ── Summary table ────────────────────────────────────── */}
           <div className="card overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <p className="text-sm font-semibold text-gray-800">Employee Summary</p>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Employee Summary</p>
               <div className="relative">
-                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search employee…"
-                  className="pl-7 pr-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="pl-7 pr-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
                     {(
                       [
@@ -314,7 +305,7 @@ const AttendanceReport = () => {
                       <th
                         key={key}
                         onClick={() => toggleSort(key)}
-                        className="text-left px-4 py-3 text-xs font-medium text-gray-500 cursor-pointer select-none hover:text-gray-800"
+                        className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 cursor-pointer select-none hover:text-gray-800 dark:hover:text-gray-200"
                       >
                         <div className="flex items-center gap-1">
                           {label}
@@ -324,19 +315,19 @@ const AttendanceReport = () => {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {sortedRows.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="text-center py-8 text-sm text-gray-400">
+                      <td colSpan={9} className="text-center py-8 text-sm text-gray-400 dark:text-gray-500">
                         No data for selected filters.
                       </td>
                     </tr>
                   ) : (
                     sortedRows.map((row) => (
-                      <tr key={row.employee_id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-gray-800">{row.employee_name}</td>
-                        <td className="px-4 py-3 text-gray-500">{row.department}</td>
-                        <td className="px-4 py-3 text-gray-700">{row.total_days}</td>
+                      <tr key={row.employee_id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{row.employee_name}</td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{row.department}</td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{row.total_days}</td>
                         <td className="px-4 py-3 text-green-700 font-medium">{row.present}</td>
                         <td className="px-4 py-3 text-red-600">{row.absent}</td>
                         <td className="px-4 py-3 text-amber-600">{row.late}</td>
@@ -344,7 +335,7 @@ const AttendanceReport = () => {
                         <td className="px-4 py-3 text-purple-600">{row.leave}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-gray-200 rounded-full h-1.5 min-w-[60px]">
+                            <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 min-w-[60px]">
                               <div
                                 className={cn(
                                   'h-1.5 rounded-full',

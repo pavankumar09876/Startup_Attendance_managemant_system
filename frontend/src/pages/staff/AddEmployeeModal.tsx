@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -11,6 +11,7 @@ import type { EmploymentType, WorkLocation } from '@/types/user.types'
 import { ROLES, ROLE_LABELS } from '@/constants/roles'
 import Modal from '@/components/common/Modal'
 import Button from '@/components/common/Button'
+import DatePicker from '@/components/common/DatePicker'
 import { cn } from '@/utils/cn'
 
 // ── Schema ─────────────────────────────────────────────────────────────────────
@@ -55,20 +56,20 @@ const StepIndicator = ({ current }: { current: number }) => (
         <div key={s} className="flex items-center gap-1.5">
           <div className={cn(
             'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors shrink-0',
-            current >= s ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500',
+            current >= s ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400',
           )}>
             {current > s ? <CheckCircle2 size={13} /> : s}
           </div>
           <span className={cn(
             'text-xs font-medium hidden sm:block',
-            current >= s ? 'text-blue-600' : 'text-gray-400',
+            current >= s ? 'text-blue-600' : 'text-gray-400 dark:text-gray-500',
           )}>
             {label}
           </span>
           {s < STEP_LABELS.length && (
             <div className={cn(
               'w-4 h-px mx-1',
-              current > s ? 'bg-blue-400' : 'bg-gray-200',
+              current > s ? 'bg-blue-400' : 'bg-gray-200 dark:bg-gray-700',
             )} />
           )}
         </div>
@@ -84,7 +85,7 @@ const Field = ({
   label: string; error?: string; required?: boolean; children: React.ReactNode
 }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
       {label}{required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
     {children}
@@ -94,8 +95,10 @@ const Field = ({
 
 const inputCls = (err?: string) => cn(
   'w-full px-3 py-2.5 rounded-lg border text-sm',
+  'bg-white dark:bg-gray-900 text-gray-900 dark:text-white',
+  'placeholder-gray-400 dark:placeholder-gray-500',
   'focus:outline-none focus:ring-2 focus:ring-blue-500',
-  err ? 'border-red-400' : 'border-gray-300',
+  err ? 'border-red-400' : 'border-gray-300 dark:border-gray-600',
 )
 
 // ── Main ───────────────────────────────────────────────────────────────────────
@@ -118,7 +121,7 @@ const AddEmployeeModal = ({ open, onClose }: Props) => {
   })
 
   const {
-    register, handleSubmit, watch, setValue, reset,
+    register, handleSubmit, watch, setValue, reset, control, trigger,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -135,7 +138,7 @@ const AddEmployeeModal = ({ open, onClose }: Props) => {
     if (open) {
       staffService.generateEmployeeId()
         .then((r) => setValue('employee_id', r.employee_id))
-        .catch(() => setValue('employee_id', `EMP${Date.now().toString().slice(-4)}`))
+        .catch(() => setValue('employee_id', crypto.randomUUID()))
     }
   }, [open, setValue])
 
@@ -153,7 +156,20 @@ const AddEmployeeModal = ({ open, onClose }: Props) => {
 
   const handleClose = () => { reset(); setStep(1); onClose() }
 
-  const goNext = handleSubmit(() => setStep((s) => (s < 4 ? (s + 1) as any : s))  )
+  // Fields to validate per step — only block navigation if *this step's* fields are invalid
+  const STEP_FIELDS: Record<number, (keyof FormData)[]> = {
+    1: ['first_name', 'last_name', 'email'],
+    2: ['employee_id', 'date_of_joining'],
+    3: [],
+    4: ['role', 'password'],
+  }
+
+  const goNext = async () => {
+    const fields = STEP_FIELDS[step] ?? []
+    // trigger() with specific fields only validates those fields
+    const valid = fields.length === 0 || await trigger(fields)
+    if (valid) setStep((s) => (s < 4 ? (s + 1) as any : s))
+  }
   const onSubmit = handleSubmit((data) => mutate(data))
 
   const employmentTypes: { value: EmploymentType; label: string }[] = [
@@ -191,7 +207,9 @@ const AddEmployeeModal = ({ open, onClose }: Props) => {
               <input {...register('phone')} placeholder="+91 9876543210" className={inputCls()} />
             </Field>
             <Field label="Date of Birth">
-              <input type="date" max={today} {...register('date_of_birth')} className={inputCls()} />
+              <Controller name="date_of_birth" control={control} render={({ field }) => (
+                <DatePicker value={field.value ?? ''} onChange={field.onChange} max={today} placeholder="Select DOB" />
+              )} />
             </Field>
           </div>
           <div className="flex gap-3 pt-1">
@@ -215,7 +233,7 @@ const AddEmployeeModal = ({ open, onClose }: Props) => {
                       .then((r) => setValue('employee_id', r.employee_id))
                       .catch(() => {})
                   }
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-blue-600"
                   title="Regenerate"
                 >
                   <RefreshCw size={13} />
@@ -223,7 +241,9 @@ const AddEmployeeModal = ({ open, onClose }: Props) => {
               </div>
             </Field>
             <Field label="Joining Date" required error={errors.date_of_joining?.message}>
-              <input type="date" {...register('date_of_joining')} className={inputCls(errors.date_of_joining?.message)} />
+              <Controller name="date_of_joining" control={control} render={({ field }) => (
+                <DatePicker value={field.value ?? ''} onChange={field.onChange} error={!!errors.date_of_joining} placeholder="Select date" />
+              )} />
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -283,20 +303,21 @@ const AddEmployeeModal = ({ open, onClose }: Props) => {
             ].map(({ name, label }) => (
               <Field key={name} label={label}>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">₹</span>
                   <input
                     type="number"
                     min="0"
                     {...register(name)}
                     placeholder="0"
-                    className="w-full pl-6 pr-3 py-2.5 rounded-lg border border-gray-300 text-sm
+                    className="w-full pl-6 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm
+                      bg-white dark:bg-gray-900 text-gray-900 dark:text-white
                       focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </Field>
             ))}
           </div>
-          <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 text-xs text-blue-700">
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800 text-xs text-blue-700 dark:text-blue-300">
             Gross salary: ₹{(
               (Number(watch('salary') ?? 0) +
                Number(watch('hra') ?? 0) +
@@ -329,7 +350,7 @@ const AddEmployeeModal = ({ open, onClose }: Props) => {
                     'px-3 py-2.5 rounded-lg border text-sm font-medium transition-all',
                     watch('role') === r
                       ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300',
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600',
                   )}>
                     {ROLE_LABELS[r]}
                   </div>
@@ -348,17 +369,17 @@ const AddEmployeeModal = ({ open, onClose }: Props) => {
           </Field>
 
           {/* Send welcome email toggle */}
-          <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl">
+          <div className="flex items-center justify-between py-3 px-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
             <div>
-              <p className="text-sm font-medium text-gray-800">Send welcome email</p>
-              <p className="text-xs text-gray-500">Email login credentials to employee</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-100">Send welcome email</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Email login credentials to employee</p>
             </div>
             <button
               type="button"
               onClick={() => setSendWelcome((v) => !v)}
               className={cn(
                 'relative inline-flex w-10 h-5 rounded-full transition-colors',
-                sendWelcome ? 'bg-blue-600' : 'bg-gray-200',
+                sendWelcome ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700',
               )}
             >
               <span className={cn(

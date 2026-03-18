@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -11,6 +11,7 @@ import { projectService } from '@/services/project.service'
 import type { CreateExpensePayload } from '@/types/payroll.types'
 import Modal from '@/components/common/Modal'
 import Button from '@/components/common/Button'
+import DatePicker from '@/components/common/DatePicker'
 import { cn } from '@/utils/cn'
 
 const schema = z.object({
@@ -25,7 +26,9 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 const inputCls = cn(
-  'w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm',
+  'w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm',
+  'bg-white dark:bg-gray-900 text-gray-900 dark:text-white',
+  'placeholder-gray-400 dark:placeholder-gray-500',
   'focus:outline-none focus:ring-2 focus:ring-blue-500',
 )
 
@@ -56,6 +59,7 @@ const SubmitExpenseModal = ({ open, onClose }: Props) => {
     watch,
     setValue,
     reset,
+    control,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -98,14 +102,14 @@ const SubmitExpenseModal = ({ open, onClose }: Props) => {
       <form onSubmit={handleSubmit((d) => mutate(d))} className="space-y-4">
         {/* Title */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Title</label>
           <input {...register('title')} placeholder="e.g. Client dinner" className={inputCls} />
           {errors.title && <p className="text-xs text-red-500 mt-0.5">{errors.title.message}</p>}
         </div>
 
         {/* Category pills */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-2">Category</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">Category</label>
           <div className="flex gap-2 flex-wrap">
             {CATEGORIES.map((c) => (
               <button
@@ -116,7 +120,7 @@ const SubmitExpenseModal = ({ open, onClose }: Props) => {
                   'px-3 py-1.5 rounded-lg text-xs font-medium border-2 transition-all',
                   selectedCategory === c.value
                     ? `${c.color} border-current`
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300',
+                    : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600',
                 )}
               >
                 {c.label}
@@ -128,9 +132,9 @@ const SubmitExpenseModal = ({ open, onClose }: Props) => {
         {/* Amount + Date */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Amount (₹)</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Amount (₹)</label>
             <div className="relative">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">₹</span>
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-xs">₹</span>
               <input
                 type="number"
                 min="1"
@@ -142,15 +146,17 @@ const SubmitExpenseModal = ({ open, onClose }: Props) => {
             {errors.amount && <p className="text-xs text-red-500 mt-0.5">{errors.amount.message}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
-            <input type="date" {...register('date')} className={inputCls} />
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Date</label>
+            <Controller name="date" control={control} render={({ field }) => (
+              <DatePicker value={field.value ?? ''} onChange={field.onChange} error={!!errors.date} placeholder="Select date" />
+            )} />
             {errors.date && <p className="text-xs text-red-500 mt-0.5">{errors.date.message}</p>}
           </div>
         </div>
 
         {/* Project */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Project (optional)</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Project (optional)</label>
           <select {...register('project_id')} className={inputCls}>
             <option value="">No project</option>
             {projects.map((p: any) => (
@@ -161,7 +167,7 @@ const SubmitExpenseModal = ({ open, onClose }: Props) => {
 
         {/* Receipt upload */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Receipt</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Receipt</label>
           <input
             ref={fileRef}
             type="file"
@@ -171,7 +177,7 @@ const SubmitExpenseModal = ({ open, onClose }: Props) => {
           />
           {preview ? (
             <div className="relative">
-              <img src={preview} alt="Receipt" className="w-full max-h-40 object-cover rounded-lg border border-gray-200" />
+              <img src={preview} alt="Receipt" className="w-full max-h-40 object-cover rounded-lg border border-gray-200 dark:border-gray-700" />
               <button
                 type="button"
                 onClick={() => { setReceipt(null); setPreview(null) }}
@@ -184,15 +190,15 @@ const SubmitExpenseModal = ({ open, onClose }: Props) => {
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="w-full flex flex-col items-center gap-2 py-5 border-2 border-dashed border-gray-300
-                rounded-lg text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
+              className="w-full flex flex-col items-center gap-2 py-5 border-2 border-dashed border-gray-300 dark:border-gray-600
+                rounded-lg text-gray-400 dark:text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors"
             >
               <Upload size={20} />
               <span className="text-xs">Click to upload image or PDF</span>
             </button>
           )}
           {receipt && !preview && (
-            <div className="flex items-center gap-2 mt-1.5 text-xs text-gray-600">
+            <div className="flex items-center gap-2 mt-1.5 text-xs text-gray-600 dark:text-gray-300">
               <Image size={12} />
               {receipt.name}
             </div>
@@ -201,7 +207,7 @@ const SubmitExpenseModal = ({ open, onClose }: Props) => {
 
         {/* Notes */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Notes (optional)</label>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Notes (optional)</label>
           <textarea
             rows={2}
             {...register('notes')}
@@ -210,7 +216,7 @@ const SubmitExpenseModal = ({ open, onClose }: Props) => {
           />
         </div>
 
-        <div className="flex gap-3 pt-1 border-t border-gray-100">
+        <div className="flex gap-3 pt-1 border-t border-gray-100 dark:border-gray-700">
           <Button variant="secondary" className="flex-1" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>

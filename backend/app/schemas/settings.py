@@ -18,6 +18,7 @@ class CompanySettingsOut(BaseModel):
     working_days:    List[int]
     work_start_time: str
     work_end_time:   str
+    admin_ip_whitelist: List[str] = []
 
     class Config:
         from_attributes = True
@@ -36,6 +37,7 @@ class CompanySettingsUpdate(BaseModel):
     working_days:    Optional[List[int]] = None
     work_start_time: Optional[str]       = None
     work_end_time:   Optional[str]       = None
+    admin_ip_whitelist: Optional[List[str]] = None
 
 
 class AttendanceConfigOut(BaseModel):
@@ -50,6 +52,17 @@ class AttendanceConfigOut(BaseModel):
     require_selfie:           bool
     auto_mark_absent:         bool
     auto_absent_after_time:   str
+    checkin_reminder_time:    str
+    checkout_reminder_time:   str
+    # Penalty config
+    late_penalty_enabled:     bool = False
+    late_penalty_amount:      Optional[float] = 0
+    late_penalty_type:        str = "fixed"
+    absent_penalty_enabled:   bool = False
+    absent_penalty_days:      Optional[float] = 1
+    half_day_deduction_enabled: bool = False
+    half_day_deduction_amount:  Optional[float] = 0
+    max_late_days_before_deduction: int = 3
 
     class Config:
         from_attributes = True
@@ -66,6 +79,16 @@ class AttendanceConfigUpdate(BaseModel):
     require_selfie:           Optional[bool]  = None
     auto_mark_absent:         Optional[bool]  = None
     auto_absent_after_time:   Optional[str]   = None
+    checkin_reminder_time:    Optional[str]   = None
+    checkout_reminder_time:   Optional[str]   = None
+    late_penalty_enabled:     Optional[bool]  = None
+    late_penalty_amount:      Optional[float] = None
+    late_penalty_type:        Optional[str]   = None
+    absent_penalty_enabled:   Optional[bool]  = None
+    absent_penalty_days:      Optional[float] = None
+    half_day_deduction_enabled: Optional[bool]  = None
+    half_day_deduction_amount:  Optional[float] = None
+    max_late_days_before_deduction: Optional[int] = None
 
 
 class LeavePolicyCreate(BaseModel):
@@ -74,6 +97,15 @@ class LeavePolicyCreate(BaseModel):
     carry_forward:  bool = False
     max_carry_days: int  = 0
     is_paid:        bool = True
+    sandwich_rule:  bool = False
+    allow_half_day: bool = True
+    allow_negative_balance: bool = False
+    max_negative_days: float = 0
+    encashment_allowed: bool = False
+    encashment_max_days: Optional[int] = None
+    accrual_type:   str = "yearly"
+    monthly_accrual_amount: Optional[float] = None
+    probation_days_before_eligible: int = 0
 
 
 class LeavePolicyUpdate(BaseModel):
@@ -82,6 +114,15 @@ class LeavePolicyUpdate(BaseModel):
     carry_forward:  Optional[bool] = None
     max_carry_days: Optional[int]  = None
     is_paid:        Optional[bool] = None
+    sandwich_rule:  Optional[bool] = None
+    allow_half_day: Optional[bool] = None
+    allow_negative_balance: Optional[bool] = None
+    max_negative_days: Optional[float] = None
+    encashment_allowed: Optional[bool] = None
+    encashment_max_days: Optional[int] = None
+    accrual_type:   Optional[str]  = None
+    monthly_accrual_amount: Optional[float] = None
+    probation_days_before_eligible: Optional[int] = None
 
 
 class LeavePolicyOut(BaseModel):
@@ -91,6 +132,15 @@ class LeavePolicyOut(BaseModel):
     carry_forward:  bool
     max_carry_days: int
     is_paid:        bool
+    sandwich_rule:  bool = False
+    allow_half_day: bool = True
+    allow_negative_balance: bool = False
+    max_negative_days: float = 0
+    encashment_allowed: bool = False
+    encashment_max_days: Optional[int] = None
+    accrual_type:   str = "yearly"
+    monthly_accrual_amount: Optional[float] = None
+    probation_days_before_eligible: int = 0
     created_at:     datetime
 
     class Config:
@@ -127,6 +177,8 @@ class NotificationPrefOut(BaseModel):
     project_deadline_email:           bool
     project_deadline_inapp:           bool
     birthday_reminder_inapp:          bool
+    checkin_reminder_inapp:           bool
+    checkout_reminder_inapp:          bool
 
     class Config:
         from_attributes = True
@@ -145,3 +197,5 @@ class NotificationPrefUpdate(BaseModel):
     project_deadline_email:           Optional[bool] = None
     project_deadline_inapp:           Optional[bool] = None
     birthday_reminder_inapp:          Optional[bool] = None
+    checkin_reminder_inapp:           Optional[bool] = None
+    checkout_reminder_inapp:          Optional[bool] = None

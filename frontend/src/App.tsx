@@ -4,6 +4,8 @@ import { ROLES } from '@/constants/roles'
 
 import ProtectedRoute from '@/components/common/ProtectedRoute'
 import AppLayout from '@/components/layout/AppLayout'
+import CommandPalette from '@/components/CommandPalette'
+import KeyboardShortcuts from '@/components/KeyboardShortcuts'
 
 // Auth pages
 import LoginPage from '@/pages/auth/LoginPage'
@@ -25,6 +27,9 @@ import ReportsPage    from '@/pages/reports/ReportsPage'
 import SettingsPage   from '@/pages/settings/SettingsPage'
 
 const App = () => (
+  <>
+  <CommandPalette />
+  <KeyboardShortcuts />
   <Routes>
     {/* ── Public routes ─────────────────────────────────────── */}
     <Route path={ROUTES.LOGIN}           element={<LoginPage />} />
@@ -96,6 +101,7 @@ const App = () => (
     {/* Catch-all */}
     <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
   </Routes>
+  </>
 )
 
 export default App

@@ -52,12 +52,32 @@ const downloadTemplate = () => {
   URL.revokeObjectURL(url)
 }
 
+/** Parse a CSV line respecting quoted fields with commas */
+function parseCSVLine(line: string): string[] {
+  const result: string[] = []
+  let current = ''
+  let inQuotes = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (ch === '"') {
+      inQuotes = !inQuotes
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim())
+      current = ''
+    } else {
+      current += ch
+    }
+  }
+  result.push(current.trim())
+  return result
+}
+
 const parseCSV = (text: string): ParsedRow[] => {
   const lines = text.trim().split('\n')
   if (lines.length < 2) return []
-  const headers = lines[0].split(',').map((h) => h.trim().replace(/"/g, ''))
+  const headers = parseCSVLine(lines[0])
   return lines.slice(1).map((line, i) => {
-    const values = line.split(',').map((v) => v.trim().replace(/"/g, ''))
+    const values = parseCSVLine(line)
     const row: any = { _status: 'pending', _index: i + 1 }
     headers.forEach((h, hi) => { row[h] = values[hi] ?? '' })
     // Validate required fields
@@ -112,7 +132,7 @@ const BulkImportModal = ({ open, onClose }: Props) => {
           salary:          row.salary ? parseFloat(row.salary) : undefined,
           date_of_joining: row.date_of_joining || undefined,
           employment_type: (row.employment_type || 'full_time') as any,
-          password:        'Temp@1234',   // initial password
+          password:        crypto.randomUUID().slice(0, 12) + '!A1',
         } as any)
         setRows((prev) => prev.map((r) => r._index === row._index ? { ...r, _status: 'success' } : r))
         successCount++
@@ -205,11 +225,11 @@ const BulkImportModal = ({ open, onClose }: Props) => {
                 <table className="w-full text-xs">
                   <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
                     <tr>
-                      <th className="px-3 py-2 text-left text-gray-500">#</th>
-                      <th className="px-3 py-2 text-left text-gray-500">Name</th>
-                      <th className="px-3 py-2 text-left text-gray-500">Email</th>
-                      <th className="px-3 py-2 text-left text-gray-500">Role</th>
-                      <th className="px-3 py-2 text-left text-gray-500">Status</th>
+                      <th className="px-3 py-2 text-left text-gray-500 dark:text-gray-400">#</th>
+                      <th className="px-3 py-2 text-left text-gray-500 dark:text-gray-400">Name</th>
+                      <th className="px-3 py-2 text-left text-gray-500 dark:text-gray-400">Email</th>
+                      <th className="px-3 py-2 text-left text-gray-500 dark:text-gray-400">Role</th>
+                      <th className="px-3 py-2 text-left text-gray-500 dark:text-gray-400">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
@@ -222,8 +242,8 @@ const BulkImportModal = ({ open, onClose }: Props) => {
                         <td className="px-3 py-2 font-medium text-gray-700 dark:text-gray-300">
                           {row.first_name} {row.last_name}
                         </td>
-                        <td className="px-3 py-2 text-gray-500">{row.email}</td>
-                        <td className="px-3 py-2 text-gray-500 capitalize">{row.role || 'employee'}</td>
+                        <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{row.email}</td>
+                        <td className="px-3 py-2 text-gray-500 dark:text-gray-400 capitalize">{row.role || 'employee'}</td>
                         <td className="px-3 py-2">
                           {row._status === 'pending' && <span className="text-gray-400">Pending</span>}
                           {row._status === 'success' && (

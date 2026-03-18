@@ -1,5 +1,5 @@
 import api from './api'
-import type { Sprint } from '@/types/project.types'
+import type { Sprint, SprintWorkload } from '@/types/project.types'
 
 export interface CreateSprintPayload {
   name: string
@@ -31,4 +31,7 @@ export const sprintService = {
 
   remove: (sprintId: string) =>
     api.delete(`/api/sprints/${sprintId}`).then((r) => r.data),
+
+  getWorkload: (sprintId: string) =>
+    api.get<SprintWorkload>(`/api/sprints/${sprintId}/workload`).then((r) => r.data),
 }

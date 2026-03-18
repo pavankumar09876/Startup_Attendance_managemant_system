@@ -5,7 +5,7 @@ import { ROUTES } from '@/constants/routes'
 import { authService } from '@/services/auth.service'
 
 // Role → default landing page after login
-const ROLE_REDIRECT: Record<string, string> = {
+export const ROLE_REDIRECT: Record<string, string> = {
   [ROLES.SUPER_ADMIN]: ROUTES.DASHBOARD,
   [ROLES.ADMIN]:       ROUTES.DASHBOARD,
   [ROLES.HR]:          ROUTES.DASHBOARD,
@@ -14,7 +14,7 @@ const ROLE_REDIRECT: Record<string, string> = {
 }
 
 export const useAuth = () => {
-  const { user, token, setAuth, setUser, logout: storeLogout } = useAuthStore()
+  const { user, token, refreshToken, setAuth, setUser, logout: storeLogout } = useAuthStore()
   const navigate = useNavigate()
 
   const isAuthenticated = !!token && !!user
@@ -27,9 +27,9 @@ export const useAuth = () => {
   const isManager = hasRole(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER)
 
   /** Call after a successful login mutation to persist and redirect. */
-  const login = (userData: typeof user, accessToken: string) => {
+  const login = (userData: typeof user, accessToken: string, refreshTokenValue: string) => {
     if (!userData) return
-    setAuth(userData, accessToken)
+    setAuth(userData, accessToken, refreshTokenValue)
     // Force password change before anything else
     if (userData.must_change_password) {
       navigate(ROUTES.SET_PASSWORD, { replace: true })
@@ -54,6 +54,7 @@ export const useAuth = () => {
   return {
     user,
     token,
+    refreshToken,
     isAuthenticated,
     hasRole,
     isAdmin,

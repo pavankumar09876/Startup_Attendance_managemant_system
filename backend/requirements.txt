@@ -10,11 +10,30 @@ psycopg2-binary==2.9.9
 
 # Auth & Security
 python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
 
 # Config & Validation
-pydantic==2.9.2
+pydantic[email]==2.9.2
 pydantic-settings==2.5.2
 
 # Utils
 python-multipart==0.0.12
+
+# Scheduler (reminder cron jobs)
+apscheduler==3.10.4
+
+# PDF generation (payslip download)
+reportlab==4.2.5
+
+# Rate limiting
+slowapi==0.1.9
+
+# MFA (TOTP)
+pyotp==2.9.0
+qrcode[pil]==8.0
+
+# Background task queue
+arq==0.26.1
+
+# Redis (async client, also used by arq)
+redis[hiredis]==5.2.1

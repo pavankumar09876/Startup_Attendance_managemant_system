@@ -15,7 +15,7 @@ const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: (v: b
     onClick={() => onChange(!checked)}
     className={cn(
       'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors',
-      checked ? 'bg-blue-600' : 'bg-gray-200',
+      checked ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700',
     )}
   >
     <span
@@ -53,7 +53,7 @@ const EditRow = ({
   const set = (k: keyof LeaveForm, v: any) => setForm((p) => ({ ...p, [k]: v }))
 
   return (
-    <tr className="bg-blue-50">
+    <tr className="bg-blue-50 dark:bg-blue-950">
       {/* Name */}
       <td className="px-4 py-2">
         <input
@@ -123,7 +123,7 @@ const EditRow = ({
           </button>
           <button
             onClick={onCancel}
-            className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <X size={13} />
           </button>
@@ -171,8 +171,8 @@ const LeaveSettings = () => {
     <div className="space-y-5 max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-800">Leave Policies</h3>
-          <p className="text-xs text-gray-400 mt-0.5">{leaveTypes.length} leave types configured</p>
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-white">Leave Policies</h3>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{leaveTypes.length} leave types configured</p>
         </div>
         {!addingNew && (
           <Button
@@ -189,20 +189,20 @@ const LeaveSettings = () => {
         {isLoading ? (
           <div className="p-5 space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-10 bg-gray-100 animate-pulse rounded-lg" />
+              <div key={i} className="h-10 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
             ))}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
                   {['Leave Name', 'Days / Year', 'Carry Forward', 'Max Carry Days', 'Type', 'Actions'].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
+                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {/* Add new row */}
                 {addingNew && (
                   <EditRow
@@ -214,7 +214,7 @@ const LeaveSettings = () => {
 
                 {leaveTypes.length === 0 && !addingNew ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-sm text-gray-400">
+                    <td colSpan={6} className="text-center py-8 text-sm text-gray-400 dark:text-gray-500">
                       No leave types configured. Add your first one above.
                     </td>
                   </tr>
@@ -235,24 +235,24 @@ const LeaveSettings = () => {
                         isSaving={updating}
                       />
                     ) : (
-                      <tr key={lt.id} className="hover:bg-gray-50 transition-colors group">
-                        <td className="px-4 py-3 font-medium text-gray-800">{lt.name}</td>
-                        <td className="px-4 py-3 text-gray-700">{lt.days_per_year}</td>
+                      <tr key={lt.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+                        <td className="px-4 py-3 font-medium text-gray-800 dark:text-white">{lt.name}</td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{lt.days_per_year}</td>
                         <td className="px-4 py-3">
                           <span className={cn(
                             'text-xs font-medium px-2 py-0.5 rounded-full',
-                            lt.carry_forward ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500',
+                            lt.carry_forward ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
                           )}>
                             {lt.carry_forward ? 'Yes' : 'No'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                           {lt.carry_forward ? (lt.max_carry_days ?? '—') : '—'}
                         </td>
                         <td className="px-4 py-3">
                           <span className={cn(
                             'text-xs font-medium px-2 py-0.5 rounded-full',
-                            lt.is_paid ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500',
+                            lt.is_paid ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
                           )}>
                             {lt.is_paid ? 'Paid' : 'Unpaid'}
                           </span>
@@ -268,7 +268,7 @@ const LeaveSettings = () => {
                               >Yes</button>
                               <button
                                 onClick={() => setDeleteId(null)}
-                                className="text-xs text-gray-500 hover:text-gray-700"
+                                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                               >No</button>
                             </div>
                           ) : (

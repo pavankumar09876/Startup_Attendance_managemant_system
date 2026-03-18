@@ -20,8 +20,8 @@ const PIE_COLORS = ['#2563EB', '#16A34A', '#D97706', '#DC2626', '#7C3AED', '#089
 
 const SectionTitle = ({ title, subtitle }: { title: string; subtitle?: string }) => (
   <div className="mb-4">
-    <h3 className="text-[15px] font-semibold text-gray-900">{title}</h3>
-    {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+    <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white">{title}</h3>
+    {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>}
   </div>
 )
 
@@ -99,6 +99,7 @@ const AdminDashboard = ({ data }: Props) => (
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="present" stroke="#16A34A" strokeWidth={2} dot={false} name="Present" />
               <Line type="monotone" dataKey="absent"  stroke="#DC2626" strokeWidth={2} dot={false} name="Absent" />
+              <Line type="monotone" dataKey="late"    stroke="#D97706" strokeWidth={2} dot={false} name="Late" />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -172,13 +173,13 @@ const AdminDashboard = ({ data }: Props) => (
             description="Everyone is present today."
           />
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {data.absent_today.map((emp) => (
               <div key={emp.id} className="flex items-center gap-3 py-3">
                 <Avatar name={emp.name} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{emp.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{emp.department}</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{emp.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{emp.department}</p>
                 </div>
                 <div className="flex items-center gap-1 text-xs text-gray-400">
                   <UserX size={11} />
@@ -196,12 +197,12 @@ const AdminDashboard = ({ data }: Props) => (
         {data.pending_approvals.length === 0 ? (
           <EmptyState title="All clear!" description="No pending approvals." />
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {data.pending_approvals.map((item) => (
               <div key={item.id} className="flex items-center gap-3 py-3">
                 <Avatar name={item.employee} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{item.employee}</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{item.employee}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <Badge
                       label={item.type}
@@ -226,13 +227,13 @@ const AdminDashboard = ({ data }: Props) => (
       {data.recent_activity.length === 0 ? (
         <EmptyState title="No activity yet" description="Activity will appear here." />
       ) : (
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-gray-100 dark:divide-gray-700">
           {data.recent_activity.map((item) => (
             <div key={item.id} className="flex items-center gap-3 py-3">
               <Avatar name={item.user} src={item.avatar} size="sm" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium text-gray-900">{item.user}</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="font-medium text-gray-900 dark:text-white">{item.user}</span>
                   {' '}{item.action}
                 </p>
               </div>
@@ -240,6 +241,26 @@ const AdminDashboard = ({ data }: Props) => (
             </div>
           ))}
         </div>
+      )}
+    </div>
+
+    {/* ── Sprint Velocity ──────────────────────────────────────── */}
+    <div className="card p-5">
+      <SectionTitle title="Sprint Velocity" subtitle="Story points committed vs completed" />
+      {data.sprint_velocity.length === 0 ? (
+        <EmptyState title="No sprints yet" description="Complete sprints will show here." />
+      ) : (
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={data.sprint_velocity} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} />
+            <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 12 }} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Bar dataKey="capacity"  fill="#BFDBFE" radius={[4,4,0,0]} name="Committed" />
+            <Bar dataKey="completed" fill="#2563EB" radius={[4,4,0,0]} name="Completed" />
+          </BarChart>
+        </ResponsiveContainer>
       )}
     </div>
   </div>

@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+.env
+.env.*
+!.env.example
+.git
+.vscode
+uploads/*
+!uploads/.gitkeep
+tests/
+*.md
+.pytest_cache
+.mypy_cache

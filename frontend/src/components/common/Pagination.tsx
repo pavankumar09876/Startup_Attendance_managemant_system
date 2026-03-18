@@ -20,7 +20,7 @@ const Pagination = ({ page, totalPages, onNext, onPrev, onPage }: PaginationProp
       <button
         onClick={onPrev}
         disabled={page === 1}
-        className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <ChevronLeft size={16} />
       </button>
@@ -28,7 +28,7 @@ const Pagination = ({ page, totalPages, onNext, onPrev, onPage }: PaginationProp
       {pages.map((p, idx) => (
         <>
           {idx > 0 && pages[idx - 1] !== p - 1 && (
-            <span key={`ellipsis-${p}`} className="px-1 text-gray-400">…</span>
+            <span key={`ellipsis-${p}`} className="px-1 text-gray-400 dark:text-gray-500">…</span>
           )}
           <button
             key={p}
@@ -37,7 +37,7 @@ const Pagination = ({ page, totalPages, onNext, onPrev, onPage }: PaginationProp
               'w-8 h-8 rounded-lg text-sm font-medium transition-colors',
               p === page
                 ? 'bg-blue-600 text-white'
-                : 'text-gray-600 hover:bg-gray-100',
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700',
             )}
           >
             {p}
@@ -48,7 +48,7 @@ const Pagination = ({ page, totalPages, onNext, onPrev, onPage }: PaginationProp
       <button
         onClick={onNext}
         disabled={page === totalPages}
-        className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <ChevronRight size={16} />
       </button>

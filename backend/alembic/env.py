@@ -10,6 +10,19 @@ from app.database import Base
 from app.models import *  # noqa: F401, F403
 
 config = context.config
+
+# Override sqlalchemy.url from environment variable or app settings
+import os as _os
+_db_url = _os.getenv("DATABASE_URL", "")
+if not _db_url:
+    # Fall back to app config (reads .env file automatically)
+    from app.config import settings as _app_settings
+    _db_url = _app_settings.DATABASE_URL
+if _db_url:
+    if _db_url.startswith("postgresql://"):
+        _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    config.set_main_option("sqlalchemy.url", _db_url)
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 

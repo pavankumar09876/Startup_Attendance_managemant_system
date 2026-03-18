@@ -1,7 +1,10 @@
 export type ProjectStatus   = 'planning' | 'active' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled' | 'archived'
 export type TaskStatus      = 'todo' | 'in_progress' | 'in_review' | 'done' | 'blocked'
 export type TaskPriority    = 'low' | 'medium' | 'high' | 'critical'
+export type IssueType       = 'task' | 'bug' | 'story' | 'epic'
 export type ProjectPriority = 'low' | 'medium' | 'high' | 'critical'
+
+export type ProjectRoleType = 'owner' | 'manager' | 'contributor' | 'viewer'
 
 export interface ProjectMember {
   id: string
@@ -9,7 +12,7 @@ export interface ProjectMember {
   name: string
   avatar?: string
   department?: string
-  role_in_project: string
+  role_in_project: ProjectRoleType
 }
 
 export interface Milestone {
@@ -76,6 +79,28 @@ export interface Sprint {
   velocity?: number
   days_remaining?: number
   burn_rate?: number
+  over_capacity?: boolean
+}
+
+export interface MemberWorkload {
+  user_id: string
+  name: string
+  avatar?: string
+  task_count: number
+  story_points: number
+  completed_tasks: number
+  leave_days: number
+  available_days?: number
+}
+
+export interface SprintWorkload {
+  sprint_id: string
+  capacity?: number
+  total_story_points: number
+  over_capacity: boolean
+  unassigned_points: number
+  unassigned_tasks: number
+  members: MemberWorkload[]
 }
 
 export interface Task {
@@ -97,7 +122,20 @@ export interface Task {
   completed_subtasks?: number
   sprint_id?: string
   story_points?: number
+  issue_type?: IssueType
+  parent_id?: string
+  epic_id?: string
+  epic_title?: string
   created_at: string
+}
+
+export interface EpicProgress {
+  total_children: number
+  done: number
+  progress_pct: number
+  status_breakdown: Record<string, number>
+  total_story_points: number
+  completed_story_points: number
 }
 
 export interface SubTask {
@@ -128,6 +166,28 @@ export interface TimeLog {
   created_at: string
 }
 
+export interface TaskActivity {
+  id: string
+  task_id: string
+  actor_id: string
+  actor_name: string
+  action: string          // created, updated, deleted, commented
+  field?: string          // e.g. status, assignee, priority
+  old_value?: string
+  new_value?: string
+  created_at: string
+}
+
+export interface SavedTaskView {
+  id: string
+  user_id: string
+  name: string
+  filters: Record<string, string | undefined>
+  is_default: boolean
+  position: number
+  created_at: string
+}
+
 export interface CreateProjectPayload {
   name: string
   client_name?: string
@@ -137,5 +197,5 @@ export interface CreateProjectPayload {
   start_date?: string
   end_date?: string
   budget?: number
-  members?: { user_id: string; role: string }[]
+  members?: { user_id: string; role: ProjectRoleType }[]
 }

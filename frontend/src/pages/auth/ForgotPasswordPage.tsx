@@ -59,11 +59,11 @@ const ForgotPasswordPage = () => {
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-white">
+      <div className="flex-1 flex items-center justify-center p-6 bg-white dark:bg-gray-900">
         <div className="w-full max-w-[400px]">
           <Link
             to={ROUTES.LOGIN}
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-8 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-8 transition-colors"
           >
             <ArrowLeft size={14} />
             Back to sign in
@@ -72,15 +72,15 @@ const ForgotPasswordPage = () => {
           {/* ── Success state ── */}
           {sent ? (
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-5">
                 <CheckCircle size={32} className="text-green-500" />
               </div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Check your email</h2>
-              <p className="text-sm text-gray-500 mb-1">
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Check your email</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                 We've sent a password reset link to
               </p>
-              <p className="text-sm font-medium text-gray-800 mb-6">{submittedEmail}</p>
-              <p className="text-xs text-gray-400 mb-6">
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-100 mb-6">{submittedEmail}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">
                 Didn't receive it? Check your spam folder or{' '}
                 <button
                   onClick={() => setSent(false)}
@@ -100,13 +100,13 @@ const ForgotPasswordPage = () => {
           ) : (
             /* ── Form state ── */
             <>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-1">Forgot password?</h2>
-              <p className="text-sm text-gray-500 mb-7">
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">Forgot password?</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-7">
                 No worries — enter your email and we'll send you a reset link.
               </p>
 
               {errorMsg && (
-                <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-5 text-sm">
+                <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 mb-5 text-sm">
                   <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
                   <span>{errorMsg}</span>
                 </div>
@@ -114,11 +114,11 @@ const ForgotPasswordPage = () => {
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
                     Email address
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
                       <Mail size={16} />
                     </span>
                     <input
@@ -128,7 +128,8 @@ const ForgotPasswordPage = () => {
                       className={`w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                         disabled:bg-gray-50 disabled:cursor-not-allowed
-                        ${errors.email ? 'border-red-400' : 'border-gray-300'}`}
+                        dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:disabled:bg-gray-800
+                        ${errors.email ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                       {...register('email')}
                     />
                   </div>

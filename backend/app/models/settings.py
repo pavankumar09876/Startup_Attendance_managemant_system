@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, String, Boolean, DateTime, Integer, Text, Float, JSON
+    Column, String, Boolean, DateTime, Integer, Text, Float, JSON, Numeric, Date, ForeignKey,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
@@ -26,6 +26,8 @@ class CompanySettings(Base):
     working_days    = Column(JSON, default=lambda: [0, 1, 2, 3, 4])   # 0=Mon
     work_start_time = Column(String(5), default="09:00")
     work_end_time   = Column(String(5), default="18:00")
+    # IP whitelist for admin actions (JSON array of CIDR/IP strings, empty = no restriction)
+    admin_ip_whitelist = Column(JSON, default=lambda: [])
     updated_at      = Column(DateTime(timezone=True), onupdate=func.now())
 
 
@@ -44,6 +46,18 @@ class AttendanceConfig(Base):
     require_selfie          = Column(Boolean, default=False)
     auto_mark_absent        = Column(Boolean, default=False)
     auto_absent_after_time  = Column(String(5), default="11:00")
+    # Reminder notification times (HH:MM, empty string = disabled)
+    checkin_reminder_time   = Column(String(5), default="09:00")
+    checkout_reminder_time  = Column(String(5), default="18:00")
+    # Penalty configuration
+    late_penalty_enabled    = Column(Boolean, default=False)
+    late_penalty_amount     = Column(Numeric(10, 2), default=0)     # Fixed deduction per late day
+    late_penalty_type       = Column(String(20), default="fixed")   # fixed, percentage
+    absent_penalty_enabled  = Column(Boolean, default=False)
+    absent_penalty_days     = Column(Numeric(4, 1), default=1)      # Days deducted per absent day (e.g., 1.5x)
+    half_day_deduction_enabled = Column(Boolean, default=False)
+    half_day_deduction_amount  = Column(Numeric(10, 2), default=0)  # Deduction for half-day
+    max_late_days_before_deduction = Column(Integer, default=3)     # Grace: N late days allowed per month
     updated_at              = Column(DateTime(timezone=True), onupdate=func.now())
 
 
@@ -56,6 +70,16 @@ class LeavePolicy(Base):
     carry_forward   = Column(Boolean, default=False)
     max_carry_days  = Column(Integer, default=0)
     is_paid         = Column(Boolean, default=True)
+    # Enhanced leave policy fields
+    sandwich_rule           = Column(Boolean, default=False)
+    allow_half_day          = Column(Boolean, default=True)
+    allow_negative_balance  = Column(Boolean, default=False)
+    max_negative_days       = Column(Numeric(4, 1), default=0)
+    encashment_allowed      = Column(Boolean, default=False)
+    encashment_max_days     = Column(Integer, nullable=True)
+    accrual_type            = Column(String(20), default="yearly")  # yearly, monthly, quarterly
+    monthly_accrual_amount  = Column(Numeric(4, 1), nullable=True)  # e.g. 1.5 days/month
+    probation_days_before_eligible = Column(Integer, default=0)
     created_at      = Column(DateTime(timezone=True), server_default=func.now())
     updated_at      = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -74,11 +98,22 @@ class RolePermission(Base):
     updated_at  = Column(DateTime(timezone=True), onupdate=func.now())
 
 
+class Holiday(Base):
+    __tablename__ = "holidays"
+
+    id          = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name        = Column(String(200), nullable=False)
+    date        = Column(Date, nullable=False, index=True)
+    type        = Column(String(20), default="public")   # public, company
+    description = Column(Text, nullable=True)
+    created_at  = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class NotificationPreference(Base):
     __tablename__ = "notification_preferences"
 
     id                              = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id                         = Column(String(50), nullable=False, unique=True, index=True)
+    user_id                         = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
     leave_approved_email            = Column(Boolean, default=True)
     leave_approved_inapp            = Column(Boolean, default=True)
     leave_rejected_email            = Column(Boolean, default=True)
@@ -91,4 +126,6 @@ class NotificationPreference(Base):
     project_deadline_email          = Column(Boolean, default=True)
     project_deadline_inapp          = Column(Boolean, default=True)
     birthday_reminder_inapp         = Column(Boolean, default=False)
+    checkin_reminder_inapp          = Column(Boolean, default=True)
+    checkout_reminder_inapp         = Column(Boolean, default=True)
     updated_at                      = Column(DateTime(timezone=True), onupdate=func.now())

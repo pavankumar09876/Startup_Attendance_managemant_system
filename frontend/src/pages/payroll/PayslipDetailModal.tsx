@@ -55,27 +55,27 @@ const PayslipDetailModal = ({ payslipId, onClose }: Props) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-xl z-10 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-xl shadow-xl z-10 max-h-[90vh] overflow-y-auto">
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
+          className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10"
         >
           <X size={18} />
         </button>
 
         {isLoading || !ps ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Loading payslip…</div>
+          <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-sm">Loading payslip…</div>
         ) : (
           <div className="p-8">
             {/* Company header */}
-            <div className="flex items-center gap-3 pb-5 border-b border-gray-200 mb-5">
+            <div className="flex items-center gap-3 pb-5 border-b border-gray-200 dark:border-gray-700 mb-5">
               <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
                 <Building2 size={22} className="text-white" />
               </div>
               <div>
-                <p className="text-lg font-bold text-gray-900">Workforce Pro</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-lg font-bold text-gray-900 dark:text-white">Workforce Pro</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Payslip for {MONTHS[((ps as any).month ?? 1) - 1]} {(ps as any).year}
                 </p>
               </div>
@@ -94,47 +94,47 @@ const PayslipDetailModal = ({ payslipId, onClose }: Props) => {
             {/* Employee info */}
             <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-6 text-sm">
               <div>
-                <p className="text-xs text-gray-400">Employee Name</p>
-                <p className="font-semibold text-gray-900">{ps.employee_name}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Employee Name</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{ps.employee_name}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Employee ID</p>
-                <p className="font-semibold text-gray-900">{ps.employee_code}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Employee ID</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{ps.employee_code}</p>
               </div>
               {ps.department_name && (
                 <div>
-                  <p className="text-xs text-gray-400">Department</p>
-                  <p className="font-semibold text-gray-900">{ps.department_name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Department</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{ps.department_name}</p>
                 </div>
               )}
               {ps.designation && (
                 <div>
-                  <p className="text-xs text-gray-400">Designation</p>
-                  <p className="font-semibold text-gray-900">{ps.designation}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Designation</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{ps.designation}</p>
                 </div>
               )}
               <div>
-                <p className="text-xs text-gray-400">Bank Account</p>
-                <p className="font-semibold text-gray-900">{maskAccount(ps.bank_account)}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Bank Account</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{maskAccount(ps.bank_account)}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Working Days</p>
-                <p className="font-semibold text-gray-900">{ps.paid_days}/{ps.working_days}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Working Days</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{ps.paid_days}/{ps.working_days}</p>
               </div>
             </div>
 
             {/* Attendance summary */}
-            <div className="flex gap-6 mb-6 p-3 bg-gray-50 rounded-lg text-xs text-gray-600">
-              <div>Working Days: <span className="font-semibold text-gray-900">{ps.paid_days}/{ps.working_days}</span></div>
-              <div>Leaves: <span className="font-semibold text-gray-900">{ps.leave_days}</span></div>
-              <div>LOP Days: <span className={cn('font-semibold', ps.lop_days > 0 ? 'text-red-600' : 'text-gray-900')}>{ps.lop_days}</span></div>
+            <div className="flex gap-6 mb-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-xs text-gray-600 dark:text-gray-300">
+              <div>Working Days: <span className="font-semibold text-gray-900 dark:text-white">{ps.paid_days}/{ps.working_days}</span></div>
+              <div>Leaves: <span className="font-semibold text-gray-900 dark:text-white">{ps.leave_days}</span></div>
+              <div>LOP Days: <span className={cn('font-semibold', ps.lop_days > 0 ? 'text-red-600' : 'text-gray-900 dark:text-white')}>{ps.lop_days}</span></div>
             </div>
 
             {/* Earnings / Deductions */}
             <div className="grid grid-cols-2 gap-6 mb-6">
               {/* Earnings */}
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Earnings</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Earnings</p>
                 <div className="space-y-2">
                   {[
                     { label: 'Basic Salary',      value: ps.basic },
@@ -144,22 +144,22 @@ const PayslipDetailModal = ({ payslipId, onClose }: Props) => {
                     { label: 'Overtime',          value: ps.overtime },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">{label}</span>
-                      <span className={cn('font-medium', value === 0 ? 'text-gray-400' : 'text-gray-800')}>
+                      <span className="text-gray-600 dark:text-gray-300">{label}</span>
+                      <span className={cn('font-medium', value === 0 ? 'text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-100')}>
                         {fmtINR(value)}
                       </span>
                     </div>
                   ))}
                 </div>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
-                  <span className="text-sm font-semibold text-gray-800">Total Earnings</span>
-                  <span className="text-sm font-bold text-gray-900">{fmtINR(ps.gross)}</span>
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Total Earnings</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">{fmtINR(ps.gross)}</span>
                 </div>
               </div>
 
               {/* Deductions */}
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Deductions</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Deductions</p>
                 <div className="space-y-2">
                   {[
                     { label: 'PF (12%)',          value: ps.pf },
@@ -169,30 +169,30 @@ const PayslipDetailModal = ({ payslipId, onClose }: Props) => {
                     { label: 'Other Deductions',  value: ps.other_deductions },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">{label}</span>
-                      <span className={cn('font-medium', value === 0 ? 'text-gray-400' : 'text-red-600')}>
+                      <span className="text-gray-600 dark:text-gray-300">{label}</span>
+                      <span className={cn('font-medium', value === 0 ? 'text-gray-400 dark:text-gray-500' : 'text-red-600')}>
                         {fmtINR(value)}
                       </span>
                     </div>
                   ))}
                 </div>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
-                  <span className="text-sm font-semibold text-gray-800">Total Deductions</span>
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Total Deductions</span>
                   <span className="text-sm font-bold text-red-600">{fmtINR(ps.total_deductions)}</span>
                 </div>
               </div>
             </div>
 
             {/* Net salary */}
-            <div className="flex items-center justify-between px-6 py-4 bg-green-50 border border-green-200 rounded-xl mb-6">
+            <div className="flex items-center justify-between px-6 py-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl mb-6">
               <div>
-                <p className="text-xs text-green-700 font-medium">Net Salary (Take Home)</p>
-                <p className="text-2xl font-bold text-green-800">{fmtINR(ps.net_salary)}</p>
+                <p className="text-xs text-green-700 dark:text-green-400 font-medium">Net Salary (Take Home)</p>
+                <p className="text-2xl font-bold text-green-800 dark:text-green-300">{fmtINR(ps.net_salary)}</p>
               </div>
               {ps.paid_on && (
                 <div className="text-right">
-                  <p className="text-xs text-green-600">Paid on</p>
-                  <p className="text-sm font-semibold text-green-800">
+                  <p className="text-xs text-green-600 dark:text-green-400">Paid on</p>
+                  <p className="text-sm font-semibold text-green-800 dark:text-green-300">
                     {new Date(ps.paid_on).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </p>
                 </div>

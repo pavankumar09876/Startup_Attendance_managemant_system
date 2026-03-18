@@ -26,7 +26,9 @@ export interface AttendanceSettings {
   allow_wfh: boolean
   require_selfie: boolean
   auto_mark_absent: boolean
-  auto_absent_after_time: string  // "11:00"
+  auto_absent_after_time: string        // "11:00"
+  checkin_reminder_time: string         // "09:00"
+  checkout_reminder_time: string        // "18:00"
 }
 
 export interface LeaveType {
@@ -60,6 +62,8 @@ export interface NotificationPreferences {
   payslip_ready_email: boolean
   payslip_ready_inapp: boolean
   attendance_regularization_inapp: boolean
+  checkin_reminder_inapp: boolean
+  checkout_reminder_inapp: boolean
   project_deadline_email: boolean
   project_deadline_inapp: boolean
   birthday_reminder_inapp: boolean

@@ -10,10 +10,10 @@ import {
   Clock, CheckCircle, AlertCircle,
 } from 'lucide-react'
 
+import type { AxiosError } from 'axios'
 import { authService } from '@/services/auth.service'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth, ROLE_REDIRECT } from '@/hooks/useAuth'
 import { ROUTES } from '@/constants/routes'
-import { ROLES } from '@/constants/roles'
 import Button from '@/components/common/Button'
 
 const schema = z.object({
@@ -22,14 +22,6 @@ const schema = z.object({
   remember: z.boolean().optional(),
 })
 type FormData = z.infer<typeof schema>
-
-const ROLE_REDIRECT: Record<string, string> = {
-  [ROLES.SUPER_ADMIN]: ROUTES.DASHBOARD,
-  [ROLES.ADMIN]:       ROUTES.DASHBOARD,
-  [ROLES.HR]:          ROUTES.DASHBOARD,
-  [ROLES.MANAGER]:     ROUTES.PROJECTS,
-  [ROLES.EMPLOYEE]:    ROUTES.ATTENDANCE,
-}
 
 const FEATURES = [
   { icon: <Users size={16} />,    text: 'Manage your entire workforce' },
@@ -55,12 +47,12 @@ const LoginPage = () => {
       authService.login(email, password),
     onSuccess: (data) => {
       setErrorMsg('')
-      setAuth(data.user, data.access_token)
+      setAuth(data.user, data.access_token, data.refresh_token)
       toast.success(`Welcome back, ${data.user.first_name}!`)
       const redirect = ROLE_REDIRECT[data.user.role] ?? ROUTES.DASHBOARD
       navigate(redirect, { replace: true })
     },
-    onError: (err: any) => {
+    onError: (err: AxiosError<{ detail: string }>) => {
       const msg =
         err?.response?.data?.detail ?? 'Invalid email or password. Please try again.'
       setErrorMsg(msg)
@@ -104,24 +96,24 @@ const LoginPage = () => {
       </div>
 
       {/* ── Right panel — login form ───────────────────────────── */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-white">
+      <div className="flex-1 flex items-center justify-center p-6 bg-white dark:bg-gray-900">
         <div className="w-full max-w-[400px]">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-sm">WP</span>
             </div>
-            <span className="text-lg font-semibold text-gray-900">Workforce Pro</span>
+            <span className="text-lg font-semibold text-gray-900 dark:text-white">Workforce Pro</span>
           </div>
 
-          <h2 className="text-2xl font-semibold text-gray-900 mb-1">Sign in</h2>
-          <p className="text-sm text-gray-500 mb-7">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">Sign in</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-7">
             Enter your credentials to access your account
           </p>
 
           {/* Error alert */}
           {errorMsg && (
-            <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-5 text-sm">
+            <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 mb-5 text-sm">
               <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
               <span>{errorMsg}</span>
             </div>
@@ -130,11 +122,11 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
                 Email address
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
                   <Mail size={16} />
                 </span>
                 <input
@@ -144,7 +136,8 @@ const LoginPage = () => {
                   className={`w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm
                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                     disabled:bg-gray-50 disabled:cursor-not-allowed
-                    ${errors.email ? 'border-red-400' : 'border-gray-300'}`}
+                    dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:disabled:bg-gray-800
+                    ${errors.email ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                   {...register('email')}
                 />
               </div>
@@ -155,11 +148,11 @@ const LoginPage = () => {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
                   <Lock size={16} />
                 </span>
                 <input
@@ -169,13 +162,14 @@ const LoginPage = () => {
                   className={`w-full pl-10 pr-10 py-2.5 rounded-lg border text-sm
                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                     disabled:bg-gray-50 disabled:cursor-not-allowed
-                    ${errors.password ? 'border-red-400' : 'border-gray-300'}`}
+                    dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:disabled:bg-gray-800
+                    ${errors.password ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                   {...register('password')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -188,10 +182,10 @@ const LoginPage = () => {
 
             {/* Remember me + Forgot password */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 cursor-pointer select-none">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer dark:bg-gray-800"
                   {...register('remember')}
                 />
                 Remember me

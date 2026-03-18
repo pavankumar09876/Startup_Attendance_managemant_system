@@ -1,5 +1,5 @@
 const Pulse = ({ className }: { className: string }) => (
-  <div className={`bg-gray-200 animate-pulse rounded-lg ${className}`} />
+  <div className={`bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg ${className}`} />
 )
 
 const StatCardSkeleton = () => (
@@ -25,7 +25,7 @@ const TableSkeleton = () => (
   <div className="card p-5">
     <Pulse className="w-40 h-4 mb-4" />
     {Array.from({ length: 4 }).map((_, i) => (
-      <div key={i} className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
+      <div key={i} className="flex items-center gap-3 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
         <Pulse className="w-8 h-8 rounded-full" />
         <div className="flex-1 space-y-1.5">
           <Pulse className="w-32 h-3" />

@@ -1,22 +1,30 @@
 import { useState, useRef, KeyboardEvent } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Check, Plus, Clock, Send, X, Edit2, ChevronDown } from 'lucide-react'
+import { Check, Plus, Clock, Send, X, Edit2, ChevronDown, Bug, BookOpen, CheckSquare, Zap, Activity, ArrowRight } from 'lucide-react'
 
 import { taskService } from '@/services/task.service'
-import type { Task, TaskStatus, TaskPriority, ProjectMember, SubTask } from '@/types/project.types'
+import type { Task, TaskStatus, TaskPriority, IssueType, ProjectMember, SubTask, TaskActivity, EpicProgress } from '@/types/project.types'
 import { formatDate, timeAgo } from '@/utils/formatDate'
 import Avatar from '@/components/common/Avatar'
 import Badge from '@/components/common/Badge'
 import Button from '@/components/common/Button'
+import DatePicker from '@/components/common/DatePicker'
 import { cn } from '@/utils/cn'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const STATUS_OPTIONS: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'blocked']
 const PRIORITY_OPTIONS: TaskPriority[] = ['low', 'medium', 'high', 'critical']
 
+const ISSUE_TYPE_CONFIG: Record<IssueType, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
+  task:  { label: 'Task',  icon: <CheckSquare size={12} />, color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-200' },
+  bug:   { label: 'Bug',   icon: <Bug size={12} />,         color: 'text-red-600',    bg: 'bg-red-50 border-red-200' },
+  story: { label: 'Story', icon: <BookOpen size={12} />,    color: 'text-green-600',  bg: 'bg-green-50 border-green-200' },
+  epic:  { label: 'Epic',  icon: <Zap size={12} />,         color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200' },
+}
+
 const STATUS_COLORS: Record<TaskStatus, string> = {
-  todo:        'bg-gray-100 text-gray-600',
+  todo:        'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
   in_progress: 'bg-blue-100 text-blue-700',
   in_review:   'bg-purple-100 text-purple-700',
   done:        'bg-green-100 text-green-700',
@@ -24,7 +32,7 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
 }
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  low:      'bg-gray-100 text-gray-600',
+  low:      'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
   medium:   'bg-blue-100 text-blue-700',
   high:     'bg-orange-100 text-orange-700',
   critical: 'bg-red-100 text-red-700',
@@ -65,7 +73,7 @@ const InlineEdit = ({
       onKeyDown: handleKey,
       autoFocus: true,
       className: cn(
-        'w-full px-2 py-1 rounded border border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm',
+        'w-full px-2 py-1 rounded border border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm dark:bg-gray-800 dark:text-gray-100 dark:border-blue-500',
         className,
       ),
     }
@@ -79,9 +87,9 @@ const InlineEdit = ({
       <div className={cn('px-1 -mx-1', className)}>
         <span className={cn(
           'flex-1',
-          multiline ? 'whitespace-pre-wrap text-sm text-gray-600' : 'font-semibold text-lg text-gray-900',
+          multiline ? 'whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-300' : 'font-semibold text-lg text-gray-900 dark:text-gray-100',
         )}>
-          {value || <span className="text-gray-400 italic">{multiline ? 'No description.' : 'Untitled'}</span>}
+          {value || <span className="text-gray-400 dark:text-gray-400 italic">{multiline ? 'No description.' : 'Untitled'}</span>}
         </span>
       </div>
     )
@@ -91,17 +99,17 @@ const InlineEdit = ({
     <div
       onClick={() => { setDraft(value); setEditing(true) }}
       className={cn(
-        'group flex items-start gap-1 cursor-text rounded px-1 -mx-1 hover:bg-gray-50',
+        'group flex items-start gap-1 cursor-text rounded px-1 -mx-1 hover:bg-gray-50 dark:hover:bg-gray-800',
         className,
       )}
     >
       <span className={cn(
         'flex-1',
-        multiline ? 'whitespace-pre-wrap text-sm text-gray-600' : 'font-semibold text-lg text-gray-900',
+        multiline ? 'whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-300' : 'font-semibold text-lg text-gray-900 dark:text-gray-100',
       )}>
-        {value || <span className="text-gray-400 italic">{multiline ? 'Add description…' : 'Untitled'}</span>}
+        {value || <span className="text-gray-400 dark:text-gray-400 italic">{multiline ? 'Add description…' : 'Untitled'}</span>}
       </span>
-      <Edit2 size={12} className="shrink-0 mt-1.5 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Edit2 size={12} className="shrink-0 mt-1.5 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
     </div>
   )
 }
@@ -136,7 +144,7 @@ const LogTimeForm = ({
   })
 
   return (
-    <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+    <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 space-y-2">
       <div className="grid grid-cols-2 gap-2">
         <input
           type="number"
@@ -145,23 +153,17 @@ const LogTimeForm = ({
           value={form.hours}
           onChange={(e) => setForm((p) => ({ ...p, hours: e.target.value }))}
           placeholder="Hours (e.g. 1.5)"
-          className="px-2 py-1.5 rounded border border-gray-300 text-sm
-            focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-2 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100"
         />
-        <input
-          type="date"
-          value={form.date}
-          onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
-          className="px-2 py-1.5 rounded border border-gray-300 text-sm
-            focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <DatePicker value={form.date} onChange={(v) => setForm((p) => ({ ...p, date: v }))} placeholder="Date" />
       </div>
       <input
         value={form.description}
         onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
         placeholder="What did you work on? (optional)"
-        className="w-full px-2 py-1.5 rounded border border-gray-300 text-sm
-          focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+        className="w-full px-2 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-sm
+          focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:bg-gray-900 dark:text-gray-100"
       />
       <div className="flex gap-2">
         <Button
@@ -216,10 +218,46 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
     queryFn: () => taskService.getTimeLogs(task.id),
   })
 
+  const { data: activities = [] } = useQuery({
+    queryKey: ['task-activity', task.id],
+    queryFn: () => taskService.getActivity(task.id),
+  })
+
+  const isEpic = task.issue_type === 'epic'
+
+  // Epic children + progress (only when viewing an epic)
+  const { data: epicChildren = [] } = useQuery({
+    queryKey: ['epic-children', task.id],
+    queryFn: () => taskService.getEpicChildren(task.id),
+    enabled: isEpic,
+  })
+
+  const { data: epicProgress } = useQuery({
+    queryKey: ['epic-progress', task.id],
+    queryFn: () => taskService.getEpicProgress(task.id),
+    enabled: isEpic,
+  })
+
+  // Available epics in the project (for assigning non-epic tasks to an epic)
+  const { data: projectEpics = [] } = useQuery({
+    queryKey: ['project-epics', task.project_id],
+    queryFn: () => taskService.getProjectTasks(task.project_id, { issue_type: 'epic', limit: 50 }),
+    enabled: !isEpic,
+  })
+
   const invalidateTask = () => {
     queryClient.invalidateQueries({ queryKey: ['task', task.id] })
     queryClient.invalidateQueries({ queryKey: ['project-tasks', task.project_id] })
     queryClient.invalidateQueries({ queryKey: ['tasks', 'my'] })
+    queryClient.invalidateQueries({ queryKey: ['task-activity', task.id] })
+    if (isEpic) {
+      queryClient.invalidateQueries({ queryKey: ['epic-children', task.id] })
+      queryClient.invalidateQueries({ queryKey: ['epic-progress', task.id] })
+    }
+    if (task.epic_id) {
+      queryClient.invalidateQueries({ queryKey: ['epic-children', task.epic_id] })
+      queryClient.invalidateQueries({ queryKey: ['epic-progress', task.epic_id] })
+    }
   }
 
   // ── Update task fields ────────────────────────────────────────────────────
@@ -285,10 +323,10 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
       className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 bg-black/40 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-5xl max-h-[90vh] bg-white rounded-2xl shadow-2xl flex overflow-hidden">
+      <div className="w-full max-w-5xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex overflow-hidden">
 
         {/* ── LEFT PANEL (60%) ─────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto p-6 border-r border-gray-100">
+        <div className="flex-1 overflow-y-auto p-6 border-r border-gray-100 dark:border-gray-700">
 
           {/* Title */}
           <InlineEdit
@@ -307,7 +345,7 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
 
           {/* Description */}
           <div className="mt-5">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wide mb-2">
               Description
             </p>
             <InlineEdit
@@ -321,10 +359,10 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
           {/* Subtasks */}
           <div className="mt-6">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wide">
                 Subtasks
                 {subtasks.length > 0 && (
-                  <span className="ml-1.5 text-gray-500 normal-case font-normal">
+                  <span className="ml-1.5 text-gray-500 dark:text-gray-400 normal-case font-normal">
                     {completedSubtasks}/{subtasks.length}
                   </span>
                 )}
@@ -333,7 +371,7 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
 
             {/* Progress bar */}
             {subtasks.length > 0 && (
-              <div className="w-full bg-gray-100 rounded-full h-1.5 mb-3">
+              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 mb-3">
                 <div
                   className="h-1.5 bg-green-500 rounded-full transition-all"
                   style={{ width: `${(completedSubtasks / subtasks.length) * 100}%` }}
@@ -350,14 +388,14 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
                       'w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
                       s.completed
                         ? 'bg-green-500 border-green-500 text-white'
-                        : 'border-gray-300 hover:border-green-400',
+                        : 'border-gray-300 dark:border-gray-600 hover:border-green-400',
                     )}
                   >
                     {s.completed && <Check size={10} />}
                   </button>
                   <span className={cn(
                     'text-sm flex-1',
-                    s.completed ? 'line-through text-gray-400' : 'text-gray-700',
+                    s.completed ? 'line-through text-gray-400 dark:text-gray-400' : 'text-gray-700 dark:text-gray-200',
                   )}>
                     {s.title}
                   </span>
@@ -373,8 +411,8 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
                   onChange={(e) => setNewSubtask(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubtaskAdd()}
                   placeholder="Add a subtask…"
-                  className="flex-1 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-sm
-                    focus:outline-none focus:border-blue-400 focus:border-solid placeholder:text-gray-400"
+                  className="flex-1 px-3 py-1.5 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-sm
+                    focus:outline-none focus:border-blue-400 focus:border-solid placeholder:text-gray-400 dark:bg-gray-900 dark:text-gray-100"
                 />
                 <button
                   onClick={handleSubtaskAdd}
@@ -390,7 +428,7 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
 
           {/* Comments */}
           <div className="mt-6">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wide mb-3">
               Comments
             </p>
 
@@ -400,16 +438,16 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
                   <Avatar name={c.user_name} src={c.user_avatar} size="sm" />
                   <div className="flex-1">
                     <div className="flex items-baseline gap-2 mb-0.5">
-                      <span className="text-xs font-semibold text-gray-800">{c.user_name}</span>
-                      <span className="text-[10px] text-gray-400">{timeAgo(c.created_at)}</span>
+                      <span className="text-xs font-semibold text-gray-800 dark:text-gray-100">{c.user_name}</span>
+                      <span className="text-[10px] text-gray-400 dark:text-gray-400">{timeAgo(c.created_at)}</span>
                     </div>
-                    <p className="text-sm text-gray-600 leading-relaxed">{c.content}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{c.content}</p>
                   </div>
                 </div>
               ))}
 
               {comments.length === 0 && (
-                <p className="text-xs text-gray-400 italic">No comments yet.</p>
+                <p className="text-xs text-gray-400 dark:text-gray-400 italic">No comments yet.</p>
               )}
             </div>
 
@@ -421,8 +459,8 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
                 onChange={(e) => setCommentText(e.target.value)}
                 onKeyDown={(e) => handleCommentSubmit(e)}
                 placeholder="Write a comment… (Ctrl+Enter to submit)"
-                className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-sm resize-none
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+                className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm resize-none
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:bg-gray-900 dark:text-gray-100"
               />
               <button
                 onClick={() => handleCommentSubmit()}
@@ -434,27 +472,117 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
               </button>
             </div>
           </div>
+
+          {/* Activity log */}
+          <div className="mt-6">
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+              <Activity size={12} />
+              Activity
+            </p>
+
+            {activities.length === 0 ? (
+              <p className="text-xs text-gray-400 dark:text-gray-400 italic">No activity recorded yet.</p>
+            ) : (
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gray-200 dark:bg-gray-700" />
+
+                <div className="space-y-3">
+                  {activities.map((a) => (
+                    <div key={a.id} className="flex gap-3 relative">
+                      <div className={cn(
+                        'w-[15px] h-[15px] rounded-full border-2 shrink-0 mt-0.5 z-10',
+                        a.action === 'created'
+                          ? 'bg-green-500 border-green-500'
+                          : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600',
+                      )} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-700 dark:text-gray-200 leading-snug">
+                          <span className="font-medium">{a.actor_name}</span>
+                          {a.action === 'created' && (
+                            <span className="text-gray-500 dark:text-gray-400"> created this task</span>
+                          )}
+                          {a.action === 'updated' && a.field && (
+                            <>
+                              <span className="text-gray-500 dark:text-gray-400"> changed </span>
+                              <span className="font-medium">{a.field}</span>
+                            </>
+                          )}
+                        </p>
+                        {a.action === 'updated' && (a.old_value || a.new_value) && (
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                            {a.old_value && (
+                              <span className="text-xs bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded line-through">
+                                {a.old_value.replace(/_/g, ' ')}
+                              </span>
+                            )}
+                            <ArrowRight size={10} className="text-gray-400 shrink-0" />
+                            {a.new_value && (
+                              <span className="text-xs bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded">
+                                {a.new_value.replace(/_/g, ' ')}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
+                          {timeAgo(a.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── RIGHT PANEL (40%) ─────────────────────────────────────── */}
-        <div className="w-72 xl:w-80 overflow-y-auto p-5 bg-gray-50 space-y-5">
+        <div className="w-72 xl:w-80 overflow-y-auto p-5 bg-gray-50 dark:bg-gray-800 space-y-5">
 
           {/* Close button */}
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            <span className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wide">
               Details
             </span>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors"
+              className="p-1 rounded-lg text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               <X size={16} />
             </button>
           </div>
 
+          {/* Issue Type */}
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Issue Type</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {(Object.keys(ISSUE_TYPE_CONFIG) as IssueType[]).map((t) => {
+                const cfg = ISSUE_TYPE_CONFIG[t]
+                const active = (task.issue_type ?? 'task') === t
+                return (
+                  <button
+                    key={t}
+                    onClick={() => canManage && updateField({ issue_type: t })}
+                    disabled={!canManage}
+                    className={cn(
+                      'flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold border transition-all',
+                      active
+                        ? `${cfg.color} ${cfg.bg} ring-2 ring-offset-1 ring-current`
+                        : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700',
+                      !canManage && 'cursor-default opacity-80',
+                    )}
+                  >
+                    {cfg.icon}
+                    {cfg.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           {/* Status */}
           <div>
-            <p className="text-xs text-gray-500 mb-1.5">Status</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Status</p>
             <div className="relative">
               <select
                 value={task.status}
@@ -475,7 +603,7 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
 
           {/* Priority */}
           <div>
-            <p className="text-xs text-gray-500 mb-1.5">Priority</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Priority</p>
             <div className="grid grid-cols-2 gap-1.5">
               {PRIORITY_OPTIONS.map((p) => (
                 <button
@@ -486,7 +614,7 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
                     'px-2 py-1.5 rounded-lg text-xs font-semibold transition-all border capitalize',
                     task.priority === p
                       ? `${PRIORITY_COLORS[p]} border-transparent ring-2 ring-offset-1 ring-current`
-                      : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-100',
+                      : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700',
                     !canManage && 'cursor-default opacity-80',
                   )}
                 >
@@ -498,12 +626,12 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
 
           {/* Assignee */}
           <div>
-            <p className="text-xs text-gray-500 mb-1.5">Assignee</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Assignee</p>
             {canManage ? (
               <select
                 value={task.assignee_id ?? ''}
                 onChange={(e) => updateField({ assignee_id: e.target.value || undefined })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm bg-white dark:bg-gray-900 dark:text-gray-100
                   focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Unassigned</option>
@@ -512,10 +640,10 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
                 ))}
               </select>
             ) : (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                 {task.assignee_name
-                  ? <><Avatar name={task.assignee_name} src={task.assignee_avatar} size="xs" /><span className="text-sm text-gray-700">{task.assignee_name}</span></>
-                  : <span className="text-sm text-gray-400">Unassigned</span>
+                  ? <><Avatar name={task.assignee_name} src={task.assignee_avatar} size="xs" /><span className="text-sm text-gray-700 dark:text-gray-200">{task.assignee_name}</span></>
+                  : <span className="text-sm text-gray-400 dark:text-gray-400">Unassigned</span>
                 }
               </div>
             )}
@@ -523,42 +651,37 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
 
           {/* Due date */}
           <div>
-            <p className="text-xs text-gray-500 mb-1.5">Due Date</p>
-            <input
-              type="date"
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Due Date</p>
+            <DatePicker
               value={task.due_date ?? ''}
-              onChange={(e) => canManage && updateField({ due_date: e.target.value || undefined })}
+              onChange={(v) => canManage && updateField({ due_date: v || undefined })}
               readOnly={!canManage}
-              className={cn(
-                'w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white',
-                'focus:outline-none focus:ring-2 focus:ring-blue-500',
-                !canManage && 'bg-gray-50 cursor-default',
-              )}
+              placeholder="Set due date"
             />
           </div>
 
           {/* Hours */}
           <div>
-            <p className="text-xs text-gray-500 mb-1.5">Hours</p>
-            <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 px-3 py-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Hours</p>
+            <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">
               <div className="text-center">
-                <p className="text-[10px] text-gray-400">Estimated</p>
-                <p className="text-sm font-semibold text-gray-700">
+                <p className="text-[10px] text-gray-400 dark:text-gray-400">Estimated</p>
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   {task.estimated_hours ?? '—'}h
                 </p>
               </div>
-              <div className="w-px h-8 bg-gray-200" />
+              <div className="w-px h-8 bg-gray-200 dark:bg-gray-700" />
               <div className="text-center">
-                <p className="text-[10px] text-gray-400">Logged</p>
+                <p className="text-[10px] text-gray-400 dark:text-gray-400">Logged</p>
                 <p className="text-sm font-semibold text-blue-600">
                   {totalLoggedHours}h
                 </p>
               </div>
               {task.estimated_hours && (
                 <>
-                  <div className="w-px h-8 bg-gray-200" />
+                  <div className="w-px h-8 bg-gray-200 dark:bg-gray-700" />
                   <div className="text-center">
-                    <p className="text-[10px] text-gray-400">Remaining</p>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-400">Remaining</p>
                     <p className={cn(
                       'text-sm font-semibold',
                       totalLoggedHours > (task.estimated_hours ?? 0) ? 'text-red-600' : 'text-green-600',
@@ -577,7 +700,7 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
               <button
                 onClick={() => setShowLogTime(true)}
                 className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg
-                  border border-dashed border-gray-300 text-xs text-gray-500
+                  border border-dashed border-gray-300 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400
                   hover:border-blue-400 hover:text-blue-600 transition-colors"
               >
                 <Clock size={13} />
@@ -594,21 +717,21 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
           {/* Time log history */}
           {timeLogs.length > 0 && (
             <div>
-              <p className="text-xs text-gray-500 mb-2">Time Log History</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Time Log History</p>
               <div className="space-y-2">
                 {timeLogs.map((log) => (
-                  <div key={log.id} className="bg-white rounded-lg border border-gray-100 px-3 py-2">
+                  <div key={log.id} className="bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-700 px-3 py-2">
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-xs font-semibold text-gray-700">
+                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
                         {log.hours}h
                       </span>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-400">
                         {formatDate(log.date, 'MMM d')}
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-500">{log.user_name}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">{log.user_name}</p>
                     {log.description && (
-                      <p className="text-[11px] text-gray-400 mt-0.5">{log.description}</p>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-400 mt-0.5">{log.description}</p>
                     )}
                   </div>
                 ))}
@@ -617,23 +740,168 @@ const TaskDetailModal = ({ task: initialTask, members, onClose, canManage = fals
           )}
 
           {/* Labels */}
-          {task.labels && task.labels.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Labels</p>
+            <div className="flex flex-wrap gap-1.5">
+              {(task.labels ?? []).map((l) => (
+                <span key={l} className="flex items-center gap-1 text-[11px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400
+                  px-2 py-0.5 rounded-full">
+                  {l}
+                  {canManage && (
+                    <button
+                      onClick={() => updateField({ labels: (task.labels ?? []).filter((x) => x !== l) } as any)}
+                      className="text-blue-400 hover:text-blue-700 dark:hover:text-blue-200"
+                    >
+                      <X size={10} />
+                    </button>
+                  )}
+                </span>
+              ))}
+              {canManage && (
+                <input
+                  placeholder="+ label"
+                  className="text-[11px] w-16 bg-transparent border-b border-dashed border-gray-300 dark:border-gray-600
+                    text-gray-600 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500
+                    focus:outline-none focus:border-blue-400 focus:w-24 transition-all"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      const val = (e.target as HTMLInputElement).value.trim()
+                      if (val && !(task.labels ?? []).includes(val)) {
+                        updateField({ labels: [...(task.labels ?? []), val] } as any)
+                      }
+                      ;(e.target as HTMLInputElement).value = ''
+                    }
+                  }}
+                />
+              )}
+            </div>
+            {(task.labels ?? []).length === 0 && !canManage && (
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 italic mt-1">No labels</p>
+            )}
+          </div>
+
+          {/* Epic — assign this task to an epic (non-epic tasks only) */}
+          {!isEpic && (
             <div>
-              <p className="text-xs text-gray-500 mb-2">Labels</p>
-              <div className="flex flex-wrap gap-1">
-                {task.labels.map((l) => (
-                  <span key={l} className="text-[11px] bg-blue-50 text-blue-600
-                    px-2 py-0.5 rounded-full">
-                    {l}
-                  </span>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Epic</p>
+              {canManage ? (
+                <select
+                  value={task.epic_id ?? ''}
+                  onChange={(e) => updateField({ epic_id: e.target.value || undefined } as any)}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm
+                    bg-white dark:bg-gray-900 dark:text-gray-100
+                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">No epic</option>
+                  {projectEpics.map((ep) => (
+                    <option key={ep.id} value={ep.id}>{ep.title}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                  {task.epic_title ? (
+                    <span className="flex items-center gap-1.5 text-sm text-purple-600 dark:text-purple-400">
+                      <Zap size={12} /> {task.epic_title}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-400">No epic</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Epic children + progress (epic tasks only) */}
+          {isEpic && epicProgress && (
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Epic Progress</p>
+              <div className="space-y-2">
+                {/* Progress bar */}
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                  <div
+                    className="bg-purple-500 h-2.5 rounded-full transition-all"
+                    style={{ width: `${epicProgress.progress_pct}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                  <span>{epicProgress.done}/{epicProgress.total_children} done</span>
+                  <span className="font-semibold text-purple-600">{epicProgress.progress_pct}%</span>
+                </div>
+
+                {/* Story points */}
+                {epicProgress.total_story_points > 0 && (
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                    Story points: {epicProgress.completed_story_points}/{epicProgress.total_story_points}
+                  </p>
+                )}
+
+                {/* Status breakdown */}
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(epicProgress.status_breakdown).map(([status, count]) => (
+                    <span key={status} className={cn(
+                      'text-[10px] px-2 py-0.5 rounded-full font-medium',
+                      STATUS_COLORS[status as TaskStatus] || 'bg-gray-100 text-gray-600',
+                    )}>
+                      {status.replace(/_/g, ' ')} {count}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Epic children list */}
+          {isEpic && epicChildren.length > 0 && (
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Child Tasks ({epicChildren.length})
+              </p>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                {epicChildren.map((child) => (
+                  <div
+                    key={child.id}
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-900
+                      border border-gray-100 dark:border-gray-700 text-xs"
+                  >
+                    <span className={cn(
+                      'w-1.5 h-1.5 rounded-full flex-shrink-0',
+                      child.status === 'done' ? 'bg-green-500'
+                        : child.status === 'in_progress' ? 'bg-blue-500'
+                        : child.status === 'blocked' ? 'bg-red-500'
+                        : 'bg-gray-300',
+                    )} />
+                    <span className={cn(
+                      'truncate flex-1',
+                      child.status === 'done'
+                        ? 'text-gray-400 line-through'
+                        : 'text-gray-700 dark:text-gray-200',
+                    )}>
+                      {child.title}
+                    </span>
+                    <span className={cn(
+                      'text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0',
+                      PRIORITY_COLORS[child.priority],
+                    )}>
+                      {child.priority}
+                    </span>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
+          {isEpic && epicChildren.length === 0 && (
+            <div className="text-center py-3">
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 italic">
+                No tasks linked to this epic yet
+              </p>
+            </div>
+          )}
+
           {/* Metadata */}
-          <div className="pt-2 border-t border-gray-200">
-            <p className="text-[10px] text-gray-400">
+          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-[10px] text-gray-400 dark:text-gray-400">
               Created {formatDate(task.created_at, 'MMM d, yyyy')}
             </p>
           </div>

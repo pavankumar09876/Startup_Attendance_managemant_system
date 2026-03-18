@@ -72,11 +72,11 @@ const PayrollReport = () => {
       <div className="card p-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Year</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Year</label>
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {years.map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -97,7 +97,7 @@ const PayrollReport = () => {
       {isLoading ? (
         <div className="grid grid-cols-2 gap-5">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="card h-72 animate-pulse bg-gray-50" />
+            <div key={i} className="card h-72 animate-pulse bg-gray-50 dark:bg-gray-800" />
           ))}
         </div>
       ) : (
@@ -106,7 +106,7 @@ const PayrollReport = () => {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
             {/* Monthly payroll cost bar chart */}
             <div className="card p-5">
-              <p className="text-sm font-semibold text-gray-800 mb-4">Monthly Payroll Cost — {year}</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">Monthly Payroll Cost — {year}</p>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={data?.monthly ?? []} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -125,10 +125,10 @@ const PayrollReport = () => {
 
             {/* Dept cost breakdown pie */}
             <div className="card p-5">
-              <p className="text-sm font-semibold text-gray-800 mb-1">Department Cost Breakdown</p>
-              <p className="text-xs text-gray-400 mb-3">{year} total payroll</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">Department Cost Breakdown</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">{year} total payroll</p>
               {(data?.by_department?.length ?? 0) === 0 ? (
-                <div className="h-[180px] flex items-center justify-center text-sm text-gray-400">No data</div>
+                <div className="h-[180px] flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">No data</div>
               ) : (
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
@@ -159,7 +159,7 @@ const PayrollReport = () => {
 
           {/* Salary growth trend */}
           <div className="card p-5">
-            <p className="text-sm font-semibold text-gray-800 mb-4">Salary Growth Trend by Role</p>
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">Salary Growth Trend by Role</p>
             <ResponsiveContainer width="100%" height={210}>
               <LineChart data={data?.salary_growth ?? []} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -186,31 +186,31 @@ const PayrollReport = () => {
 
           {/* ── Monthly summary table ───────────────────────────── */}
           <div className="card overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <p className="text-sm font-semibold text-gray-800">Monthly Payroll Summary — {year}</p>
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Monthly Payroll Summary -- {year}</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
                     {['Month', 'Employees', 'Total Basic', 'Deductions', 'Net Payout', 'Status'].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {(data?.rows ?? []).length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-8 text-sm text-gray-400">
+                      <td colSpan={6} className="text-center py-8 text-sm text-gray-400 dark:text-gray-500">
                         No payroll data for {year}.
                       </td>
                     </tr>
                   ) : (
                     (data?.rows ?? []).map((row) => (
-                      <tr key={`${row.month}-${row.year}`} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-gray-800">{row.month}</td>
-                        <td className="px-4 py-3 text-gray-700">{row.employee_count}</td>
-                        <td className="px-4 py-3 text-gray-700">{fmtINR(row.total_basic)}</td>
+                      <tr key={`${row.month}-${row.year}`} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{row.month}</td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{row.employee_count}</td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{fmtINR(row.total_basic)}</td>
                         <td className="px-4 py-3 text-red-600">{fmtINR(row.total_deductions)}</td>
                         <td className="px-4 py-3 font-semibold text-green-700">{fmtINR(row.net_payout)}</td>
                         <td className="px-4 py-3">
@@ -226,12 +226,12 @@ const PayrollReport = () => {
                   )}
                 </tbody>
                 {(data?.rows?.length ?? 0) > 0 && (
-                  <tfoot className="bg-gray-50 border-t-2 border-gray-200">
+                  <tfoot className="bg-gray-50 dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700">
                     <tr>
-                      <td className="px-4 py-3 font-semibold text-gray-800" colSpan={2}>
+                      <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-100" colSpan={2}>
                         Total ({data?.rows?.filter((r) => r.status === 'processed').length} months processed)
                       </td>
-                      <td className="px-4 py-3 font-semibold text-gray-800">
+                      <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-100">
                         {fmtINR((data?.rows ?? []).reduce((s, r) => s + r.total_basic, 0))}
                       </td>
                       <td className="px-4 py-3 font-semibold text-red-600">

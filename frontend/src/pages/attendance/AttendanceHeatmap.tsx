@@ -120,7 +120,7 @@ const AttendanceHeatmap = ({ employeeId }: { employeeId?: string }) => {
           {monthPositions.map((mp, i) => (
             <div
               key={i}
-              className="text-[10px] text-gray-400 absolute"
+              className="text-[10px] text-gray-400 dark:text-gray-500 absolute"
               style={{ left: `${28 + mp.col * 14}px` }}
             >
               {mp.label}
@@ -132,7 +132,7 @@ const AttendanceHeatmap = ({ employeeId }: { employeeId?: string }) => {
           {/* Day-of-week labels */}
           <div className="flex flex-col gap-[3px] mr-1">
             {DAY_LABELS.map((d, i) => (
-              <div key={i} className="h-[11px] text-[9px] text-gray-400 leading-[11px]">{d}</div>
+              <div key={i} className="h-[11px] text-[9px] text-gray-400 dark:text-gray-500 leading-[11px]">{d}</div>
             ))}
           </div>
 
@@ -165,7 +165,7 @@ const AttendanceHeatmap = ({ employeeId }: { employeeId?: string }) => {
         {Object.entries(STATUS_LABEL).filter(([k]) => k !== 'none' && k !== 'weekend').map(([k, v]) => (
           <div key={k} className="flex items-center gap-1">
             <div className={cn('w-2.5 h-2.5 rounded-[2px]', STATUS_BG[k])} />
-            <span className="text-[10px] text-gray-400">{v}</span>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500">{v}</span>
           </div>
         ))}
       </div>
@@ -173,7 +173,7 @@ const AttendanceHeatmap = ({ employeeId }: { employeeId?: string }) => {
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 px-2.5 py-1.5 bg-gray-900 text-white text-xs rounded-lg shadow-lg pointer-events-none"
+          className="fixed z-50 px-2.5 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg pointer-events-none"
           style={{ left: tooltip.x + 12, top: tooltip.y - 32 }}
         >
           <span className="font-medium">{tooltip.date}</span> — {tooltip.status}

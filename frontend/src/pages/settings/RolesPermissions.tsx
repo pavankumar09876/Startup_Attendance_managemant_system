@@ -16,7 +16,7 @@ const ROLES_LIST = [
   { id: 'project_manager',  label: 'Project Manager', color: 'bg-orange-100 text-orange-700' },
   { id: 'team_lead',        label: 'Team Lead',       color: 'bg-cyan-100 text-cyan-700' },
   { id: 'manager',          label: 'Manager',         color: 'bg-amber-100 text-amber-700' },
-  { id: 'employee',         label: 'Employee',        color: 'bg-gray-100 text-gray-600' },
+  { id: 'employee',         label: 'Employee',        color: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300' },
 ]
 
 const MODULES: PermissionModule[] = [
@@ -70,7 +70,7 @@ const PermCheckbox = ({
       'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
       checked
         ? 'bg-blue-600 border-blue-600 text-white'
-        : 'border-gray-300 bg-white hover:border-blue-400',
+        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-400',
       disabled && 'opacity-40 cursor-not-allowed',
     )}
   >
@@ -139,8 +139,8 @@ const RolesPermissions = () => {
       <div className="flex items-start gap-2">
         <ShieldCheck size={16} className="text-blue-600 mt-0.5" />
         <div>
-          <p className="text-sm font-semibold text-gray-800">Roles &amp; Permissions</p>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-sm font-semibold text-gray-800 dark:text-white">Roles &amp; Permissions</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             Configure what each role can do across modules. Select a role on the left, then toggle permissions.
           </p>
         </div>
@@ -157,7 +157,7 @@ const RolesPermissions = () => {
                 'w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
                 selectedRole === role.id
                   ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-100',
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700',
               )}
             >
               {role.label}
@@ -170,45 +170,45 @@ const RolesPermissions = () => {
           {isLoading ? (
             <div className="p-5 space-y-3">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-10 bg-gray-100 animate-pulse rounded-lg" />
+                <div key={i} className="h-10 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
               ))}
             </div>
           ) : (
             <>
               {isSuperAdmin && (
-                <div className="px-4 py-3 bg-purple-50 border-b border-purple-100">
-                  <p className="text-xs text-purple-700 font-medium">
+                <div className="px-4 py-3 bg-purple-50 dark:bg-purple-950 border-b border-purple-100 dark:border-purple-800">
+                  <p className="text-xs text-purple-700 dark:text-purple-300 font-medium">
                     Super Admin has full access to all modules. Changes here are cosmetic only.
                   </p>
                 </div>
               )}
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 w-32">Module</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 w-32">Module</th>
                       {ACTIONS.map((action) => (
                         <th
                           key={action}
-                          className="px-3 py-3 text-xs font-medium text-gray-500 text-center cursor-pointer
+                          className="px-3 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 text-center cursor-pointer
                             hover:text-blue-600 select-none"
                           onClick={() => !isSuperAdmin && toggleColumn(action)}
                         >
                           {ACTION_LABELS[action]}
-                          <div className="text-[9px] text-gray-400 mt-0.5 font-normal">
+                          <div className="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5 font-normal">
                             {!isSuperAdmin ? '(toggle all)' : ''}
                           </div>
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                     {MODULES.map((module) => {
                       const rowAllOn = ACTIONS.every((a) => permissions[module]?.[a])
                       return (
-                        <tr key={module} className="hover:bg-gray-50 transition-colors">
+                        <tr key={module} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                           <td
-                            className="px-4 py-3 font-medium text-gray-800 cursor-pointer select-none hover:text-blue-600"
+                            className="px-4 py-3 font-medium text-gray-800 dark:text-white cursor-pointer select-none hover:text-blue-600"
                             onClick={() => !isSuperAdmin && toggleRow(module)}
                             title={!isSuperAdmin ? 'Click to toggle all permissions for this module' : ''}
                           >
@@ -216,7 +216,7 @@ const RolesPermissions = () => {
                               <span
                                 className={cn(
                                   'w-2 h-2 rounded-full',
-                                  rowAllOn ? 'bg-green-500' : 'bg-gray-300',
+                                  rowAllOn ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600',
                                 )}
                               />
                               {MODULE_LABELS[module]}
@@ -239,8 +239,8 @@ const RolesPermissions = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50">
-                <p className="text-xs text-gray-400">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <p className="text-xs text-gray-400 dark:text-gray-500">
                   Click a module name or column header to toggle all checkboxes in that row/column.
                 </p>
                 <Button

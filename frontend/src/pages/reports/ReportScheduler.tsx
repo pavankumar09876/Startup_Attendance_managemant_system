@@ -114,7 +114,7 @@ const ReportScheduler = () => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-gray-800 dark:text-white">Scheduled Reports</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Automatically email reports on a schedule</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Automatically email reports on a schedule</p>
         </div>
         {!showForm && (
           <Button size="sm" leftIcon={<Plus size={13} />} onClick={() => setShowForm(true)}>
@@ -129,7 +129,7 @@ const ReportScheduler = () => {
           <h4 className="text-sm font-semibold text-gray-800 dark:text-white">New Report Schedule</h4>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-500 mb-1">Schedule Name</label>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Schedule Name</label>
               <input
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
@@ -138,7 +138,7 @@ const ReportScheduler = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Report Type</label>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Report Type</label>
               <select
                 value={form.report_type}
                 onChange={(e) => setForm((p) => ({ ...p, report_type: e.target.value }))}
@@ -148,7 +148,7 @@ const ReportScheduler = () => {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Frequency</label>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Frequency</label>
               <select
                 value={form.frequency}
                 onChange={(e) => setForm((p) => ({ ...p, frequency: e.target.value as any }))}
@@ -159,7 +159,7 @@ const ReportScheduler = () => {
             </div>
             {form.frequency === 'weekly' && (
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Day of Week</label>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Day of Week</label>
                 <select
                   value={form.day_of_week}
                   onChange={(e) => setForm((p) => ({ ...p, day_of_week: Number(e.target.value) }))}
@@ -171,7 +171,7 @@ const ReportScheduler = () => {
             )}
             {form.frequency === 'monthly' && (
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Day of Month</label>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Day of Month</label>
                 <input
                   type="number" min="1" max="28"
                   value={form.day_of_month}
@@ -181,7 +181,7 @@ const ReportScheduler = () => {
               </div>
             )}
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Time</label>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Time</label>
               <input
                 type="time"
                 value={form.time}
@@ -190,7 +190,7 @@ const ReportScheduler = () => {
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-500 mb-1">
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Recipients (comma-separated emails)
               </label>
               <input
@@ -211,9 +211,9 @@ const ReportScheduler = () => {
       {/* Schedule list */}
       {schedules.length === 0 && !showForm ? (
         <div className="card py-10 text-center">
-          <Mail size={24} className="mx-auto text-gray-200 mb-2" />
-          <p className="text-sm text-gray-400">No report schedules yet.</p>
-          <p className="text-xs text-gray-300 mt-1">Create one to automate report delivery by email.</p>
+          <Mail size={24} className="mx-auto text-gray-200 dark:text-gray-600 mb-2" />
+          <p className="text-sm text-gray-400 dark:text-gray-500">No report schedules yet.</p>
+          <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">Create one to automate report delivery by email.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -221,20 +221,20 @@ const ReportScheduler = () => {
             <div key={s.id} className="card p-4 flex items-center gap-4">
               <div className={cn(
                 'w-9 h-9 rounded-lg flex items-center justify-center shrink-0',
-                s.is_active ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400',
+                s.is_active ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500',
               )}>
                 <Calendar size={16} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-800 dark:text-white">{s.name}</p>
                 <div className="flex items-center gap-3 mt-0.5">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     {REPORT_TYPES.find((r) => r.value === s.report_type)?.label}
                   </span>
-                  <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
                     <Clock size={10} /> {frequencyLabel(s)}
                   </span>
-                  <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
                     <Mail size={10} /> {s.recipients.length} recipient{s.recipients.length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -249,7 +249,7 @@ const ReportScheduler = () => {
                 </button>
                 <button
                   onClick={() => del(s.id)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                 >
                   <Trash2 size={14} />
                 </button>

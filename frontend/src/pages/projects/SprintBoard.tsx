@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import {
   DndContext, DragOverlay, pointerWithin,
   type DragEndEvent, type DragStartEvent,
@@ -15,6 +15,7 @@ import TaskCard from '@/pages/tasks/TaskCard'
 import SprintSection from './SprintSection'
 import BacklogSection from './BacklogSection'
 import CreateSprintModal from './CreateSprintModal'
+import { cn } from '@/utils/cn'
 
 interface Props {
   projectId: string
@@ -23,6 +24,7 @@ interface Props {
 
 const SprintBoard = ({ projectId, canManage = false }: Props) => {
   const [activeTask, setActiveTask]     = useState<Task | null>(null)
+  const [selectedIds, setSelectedIds]   = useState<Set<string>>(new Set())
   const [createSprintOpen, setCreateSprintOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -63,6 +65,7 @@ const SprintBoard = ({ projectId, canManage = false }: Props) => {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] })
       queryClient.invalidateQueries({ queryKey: ['sprints', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['sprint-workload'] })
     },
   })
 
@@ -82,41 +85,75 @@ const SprintBoard = ({ projectId, canManage = false }: Props) => {
 
   const sprintTasks = (sprintId: string) => tasks.filter((t) => t.sprint_id === sprintId)
 
+  // ── Multi-select ────────────────────────────────────────────────────────────
+  const toggleSelect = useCallback((taskId: string, e: React.MouseEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(taskId)) next.delete(taskId)
+        else next.add(taskId)
+        return next
+      })
+    } else if (e.shiftKey && selectedIds.size > 0) {
+      // Range select: select all tasks between last selected and clicked
+      const lastSelected = [...selectedIds].pop()!
+      const allTaskIds = tasks.map((t) => t.id)
+      const startIdx = allTaskIds.indexOf(lastSelected)
+      const endIdx = allTaskIds.indexOf(taskId)
+      if (startIdx !== -1 && endIdx !== -1) {
+        const [lo, hi] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx]
+        setSelectedIds((prev) => {
+          const next = new Set(prev)
+          for (let i = lo; i <= hi; i++) next.add(allTaskIds[i])
+          return next
+        })
+      }
+    }
+  }, [selectedIds, tasks])
+
   // ── DnD ──────────────────────────────────────────────────────────────────────
   const handleDragStart = ({ active }: DragStartEvent) => {
     const task = tasks.find((t) => t.id === active.id)
     setActiveTask(task ?? null)
+    // If dragging an unselected task, clear multi-selection
+    if (!selectedIds.has(active.id as string)) {
+      setSelectedIds(new Set())
+    }
   }
 
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    setActiveTask(null)
-    if (!over || active.id === over.id) return
-
-    const taskId = active.id as string
-    const overId = over.id as string
-
-    // Dropped on a backlog section
-    if (overId === 'backlog') {
-      updateTask({ taskId, patch: { sprint_id: undefined } })
-      return
-    }
-
-    // Dropped on sprint::status column (e.g. "abc-uuid::in_progress")
+  const buildPatch = (overId: string, taskId: string): Partial<Task> | null => {
+    if (overId === 'backlog') return { sprint_id: undefined }
     if (overId.includes('::')) {
       const [sprintId, status] = overId.split('::')
       const task = tasks.find((t) => t.id === taskId)
       const patch: Partial<Task> = {}
       if (task?.sprint_id !== sprintId) patch.sprint_id = sprintId
       if (task?.status !== status) patch.status = status as TaskStatus
-      if (Object.keys(patch).length > 0) updateTask({ taskId, patch })
-      return
+      return Object.keys(patch).length > 0 ? patch : null
+    }
+    const isSprint = sprints.some((s) => s.id === overId)
+    if (isSprint) return { sprint_id: overId }
+    return null
+  }
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setActiveTask(null)
+    if (!over || active.id === over.id) return
+
+    const overId = over.id as string
+    const draggedId = active.id as string
+
+    // If multi-selected, move all selected tasks
+    const idsToMove = selectedIds.size > 0 && selectedIds.has(draggedId)
+      ? [...selectedIds]
+      : [draggedId]
+
+    for (const taskId of idsToMove) {
+      const patch = buildPatch(overId, taskId)
+      if (patch) updateTask({ taskId, patch })
     }
 
-    // Dropped on a sprint header (sprint id only — move to sprint, keep status)
-    const isSprint = sprints.some((s) => s.id === overId)
-    if (isSprint) {
-      updateTask({ taskId, patch: { sprint_id: overId } })
-    }
+    setSelectedIds(new Set())
   }
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -124,7 +161,7 @@ const SprintBoard = ({ projectId, canManage = false }: Props) => {
     return (
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-24 bg-gray-100 animate-pulse rounded-xl" />
+          <div key={i} className="h-24 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl" />
         ))}
       </div>
     )
@@ -140,7 +177,7 @@ const SprintBoard = ({ projectId, canManage = false }: Props) => {
         {/* Toolbar */}
         {canManage && (
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
               <LayoutList size={14} />
               <span>{tasks.length} tasks · {sprints.length} sprints</span>
             </div>
@@ -157,7 +194,7 @@ const SprintBoard = ({ projectId, canManage = false }: Props) => {
 
         {/* Active + Planned sprints */}
         {visibleSprints.length === 0 && backlogTasks.length === 0 && (
-          <div className="text-center py-12 text-gray-400 text-sm">
+          <div className="text-center py-12 text-gray-400 dark:text-gray-500 text-sm">
             No sprints yet. Create a sprint to get started.
           </div>
         )}
@@ -172,6 +209,8 @@ const SprintBoard = ({ projectId, canManage = false }: Props) => {
             members={members}
             projectId={projectId}
             hasActiveSprint={hasActiveSprint && sprint.status !== 'active'}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
           />
         ))}
 
@@ -182,12 +221,14 @@ const SprintBoard = ({ projectId, canManage = false }: Props) => {
           canManage={canManage}
           members={members}
           projectId={projectId}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
         />
 
         {/* Completed sprints (collapsed by default — shown as summary) */}
         {completedSprints.length > 0 && (
           <details className="group">
-            <summary className="cursor-pointer text-xs text-gray-400 hover:text-gray-600
+            <summary className="cursor-pointer text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300
               flex items-center gap-1.5 list-none py-2">
               <span className="group-open:hidden">▶</span>
               <span className="hidden group-open:inline">▼</span>
@@ -212,10 +253,22 @@ const SprintBoard = ({ projectId, canManage = false }: Props) => {
       </div>
 
       {/* Drag overlay */}
-      <DragOverlay>
+      <DragOverlay dropAnimation={{
+        duration: 200,
+        easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+      }}>
         {activeTask && (
-          <div className="rotate-2 opacity-90 shadow-xl">
+          <div className={cn(
+            'rotate-2 shadow-xl transition-transform',
+            selectedIds.size > 1 ? 'opacity-95' : 'opacity-90',
+          )}>
             <TaskCard task={activeTask} onClick={() => {}} />
+            {selectedIds.size > 1 && (
+              <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-blue-600
+                text-white text-[10px] font-bold flex items-center justify-center shadow-lg">
+                {selectedIds.size}
+              </div>
+            )}
           </div>
         )}
       </DragOverlay>

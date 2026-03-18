@@ -19,7 +19,7 @@ const LEAVE_META: Record<LeaveType, { label: string; color: string; barColor: st
   sick:      { label: 'Sick Leave',      color: 'text-green-600',  barColor: 'bg-green-500' },
   earned:    { label: 'Earned Leave',    color: 'text-purple-600', barColor: 'bg-purple-500' },
   comp_off:  { label: 'Comp-off',        color: 'text-amber-600',  barColor: 'bg-amber-400' },
-  unpaid:    { label: 'Unpaid Leave',    color: 'text-gray-600',   barColor: 'bg-gray-400' },
+  unpaid:    { label: 'Unpaid Leave',    color: 'text-gray-600 dark:text-gray-300',   barColor: 'bg-gray-400' },
   maternity: { label: 'Maternity Leave', color: 'text-pink-600',   barColor: 'bg-pink-400' },
   paternity: { label: 'Paternity Leave', color: 'text-cyan-600',   barColor: 'bg-cyan-400' },
 }
@@ -27,26 +27,26 @@ const LEAVE_META: Record<LeaveType, { label: string; color: string; barColor: st
 // ── Balance card ──────────────────────────────────────────────────────────────
 const BalanceCard = ({ balance }: { balance: LeaveBalance }) => {
   const meta = LEAVE_META[balance.leave_type] ?? {
-    label: balance.leave_type, color: 'text-gray-600', barColor: 'bg-gray-400',
+    label: balance.leave_type, color: 'text-gray-600 dark:text-gray-300', barColor: 'bg-gray-400',
   }
   const usedPct = balance.total > 0 ? (balance.used / balance.total) * 100 : 0
 
   return (
     <div className="card p-5">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
         {meta.label}
       </p>
       <div className="flex items-end justify-between mb-3">
         <span className={`text-3xl font-bold ${meta.color}`}>{balance.remaining}</span>
-        <span className="text-xs text-gray-400">{balance.used}/{balance.total} used</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">{balance.used}/{balance.total} used</span>
       </div>
-      <div className="w-full bg-gray-100 rounded-full h-1.5">
+      <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
         <div
           className={`h-1.5 rounded-full transition-all ${meta.barColor}`}
           style={{ width: `${Math.min(usedPct, 100)}%` }}
         />
       </div>
-      <p className="text-xs text-gray-400 mt-1">{balance.remaining} days remaining</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{balance.remaining} days remaining</p>
     </div>
   )
 }
@@ -54,9 +54,9 @@ const BalanceCard = ({ balance }: { balance: LeaveBalance }) => {
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 const BalanceSkeleton = () => (
   <div className="card p-5 space-y-3 animate-pulse">
-    <div className="h-3 bg-gray-200 rounded w-24" />
-    <div className="h-8 bg-gray-200 rounded w-12" />
-    <div className="h-1.5 bg-gray-200 rounded w-full" />
+    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24" />
+    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-12" />
+    <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded w-full" />
   </div>
 )
 
@@ -85,17 +85,17 @@ const CancelModal = ({
 
   return (
     <Modal open={!!leave} onClose={onClose} title="Cancel Leave Request" size="sm">
-      <p className="text-sm text-gray-600 mb-6">
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
         Are you sure you want to cancel your{' '}
-        <span className="font-medium text-gray-900 capitalize">
+        <span className="font-medium text-gray-900 dark:text-white capitalize">
           {leave.leave_type.replace(/_/g, ' ')}
         </span>{' '}
         leave from{' '}
-        <span className="font-medium text-gray-900">
+        <span className="font-medium text-gray-900 dark:text-white">
           {formatDate(leave.start_date, 'MMM d')}
         </span>{' '}
         to{' '}
-        <span className="font-medium text-gray-900">
+        <span className="font-medium text-gray-900 dark:text-white">
           {formatDate(leave.end_date, 'MMM d, yyyy')}
         </span>?
       </p>
@@ -147,22 +147,22 @@ const MyLeaves = () => {
 
       {/* ── Leave history ────────────────────────────────────── */}
       <div className="card overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
           <div>
-            <h3 className="text-[15px] font-semibold text-gray-900">Leave History</h3>
-            <p className="text-xs text-gray-500 mt-0.5">All your leave requests</p>
+            <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white">Leave History</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">All your leave requests</p>
           </div>
         </div>
 
         {leavesLoading ? (
           <div className="p-5 space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-12 bg-gray-100 animate-pulse rounded-lg" />
+              <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
             ))}
           </div>
         ) : leaves.length === 0 ? (
           <EmptyState
-            icon={<Calendar size={40} className="text-gray-300" />}
+            icon={<Calendar size={40} className="text-gray-300 dark:text-gray-600" />}
             title="No leave requests"
             description="You haven't applied for any leave yet."
             action={
@@ -174,13 +174,13 @@ const MyLeaves = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
                   {['Type', 'From', 'To', 'Days', 'Reason', 'Applied On', 'Status', 'Actions'].map(
                     (h) => (
                       <th
                         key={h}
-                        className="text-left px-4 py-3 text-xs font-medium text-gray-500"
+                        className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400"
                       >
                         {h}
                       </th>
@@ -188,40 +188,40 @@ const MyLeaves = () => {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {leaves.map((leave) => {
                   const meta = LEAVE_META[leave.leave_type]
                   return (
-                    <tr key={leave.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={leave.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                       <td className="px-4 py-3">
-                        <span className={`text-sm font-medium ${meta?.color ?? 'text-gray-700'} capitalize`}>
+                        <span className={`text-sm font-medium ${meta?.color ?? 'text-gray-700 dark:text-gray-200'} capitalize`}>
                           {leave.leave_type.replace(/_/g, ' ')}
                         </span>
                         {leave.is_half_day && (
-                          <span className="ml-1.5 text-xs text-gray-400 uppercase">
+                          <span className="ml-1.5 text-xs text-gray-400 dark:text-gray-500 uppercase">
                             ({leave.half_day_period})
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-200 whitespace-nowrap">
                         {formatDate(leave.start_date, 'MMM d, yyyy')}
                       </td>
-                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-200 whitespace-nowrap">
                         {formatDate(leave.end_date, 'MMM d, yyyy')}
                       </td>
-                      <td className="px-4 py-3 text-gray-800 font-medium">
+                      <td className="px-4 py-3 text-gray-800 dark:text-gray-100 font-medium">
                         {leave.total_days}d
                       </td>
-                      <td className="px-4 py-3 text-gray-500 max-w-[200px]">
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 max-w-[200px]">
                         <span className="truncate block">{leave.reason}</span>
                       </td>
-                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                         {timeAgo(leave.created_at)}
                       </td>
                       <td className="px-4 py-3">
                         <Badge
                           label={leave.status}
-                          className={LEAVE_STATUS_COLORS[leave.status] ?? 'bg-gray-100 text-gray-600'}
+                          className={LEAVE_STATUS_COLORS[leave.status] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}
                         />
                       </td>
                       <td className="px-4 py-3">

@@ -25,8 +25,10 @@ export interface PaginatedTeamAttendance {
 }
 
 export const attendanceService = {
-  clockIn: (location: 'office' | 'remote' = 'office') =>
-    api.post<Attendance>('/api/attendance/clock-in', { location }).then((r) => r.data),
+  clockIn: (location: 'office' | 'remote' | 'wfh' = 'office') =>
+    api.post<Attendance>('/api/attendance/check-in', {}, {
+      params: location === 'wfh' ? { wfh: true } : {},
+    }).then((r) => r.data),
 
   clockOut: () =>
     api.post<Attendance>('/api/attendance/clock-out').then((r) => r.data),
@@ -68,4 +70,10 @@ export const attendanceService = {
     api.get<Attendance[]>('/api/attendance', {
       params: { start_date: startDate, end_date: endDate, employee_id: employeeId, limit: 400 },
     }).then((r) => r.data),
+
+  breakStart: () =>
+    api.post<Attendance>('/api/attendance/break-start').then((r) => r.data),
+
+  breakEnd: () =>
+    api.post<Attendance>('/api/attendance/break-end').then((r) => r.data),
 }

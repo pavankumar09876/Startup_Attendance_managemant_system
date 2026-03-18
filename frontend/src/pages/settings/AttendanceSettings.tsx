@@ -17,15 +17,18 @@ const schema = z.object({
   overtime_after_hours:      z.coerce.number().min(4).max(16),
   geofence_radius_meters:    z.coerce.number().min(0).max(10000),
   allow_wfh:                 z.boolean(),
-  require_selfie:            z.boolean(),
-  auto_mark_absent:          z.boolean(),
-  auto_absent_after_time:    z.string(),
+  require_selfie:             z.boolean(),
+  auto_mark_absent:           z.boolean(),
+  auto_absent_after_time:     z.string(),
+  checkin_reminder_time:      z.string(),
+  checkout_reminder_time:     z.string(),
 })
 
 type FormData = z.infer<typeof schema>
 
 const inputCls = cn(
-  'w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm',
+  'w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm',
+  'bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
   'focus:outline-none focus:ring-2 focus:ring-blue-500',
 )
 
@@ -41,10 +44,10 @@ const Toggle = ({
   label: string
   description?: string
 }) => (
-  <div className="flex items-start justify-between gap-4 py-3.5 border-b border-gray-100 last:border-0">
+  <div className="flex items-start justify-between gap-4 py-3.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
     <div>
-      <p className="text-sm font-medium text-gray-800">{label}</p>
-      {description && <p className="text-xs text-gray-400 mt-0.5">{description}</p>}
+      <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{label}</p>
+      {description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{description}</p>}
     </div>
     <button
       type="button"
@@ -52,7 +55,7 @@ const Toggle = ({
       className={cn(
         'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent',
         'transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-0.5',
-        checked ? 'bg-blue-600' : 'bg-gray-200',
+        checked ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600',
       )}
     >
       <span
@@ -96,6 +99,8 @@ const AttendanceSettings = () => {
       require_selfie:           false,
       auto_mark_absent:         false,
       auto_absent_after_time:   '11:00',
+      checkin_reminder_time:    '09:00',
+      checkout_reminder_time:   '18:00',
     },
   })
 
@@ -126,7 +131,7 @@ const AttendanceSettings = () => {
     return (
       <div className="space-y-4 max-w-2xl">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />
+          <div key={i} className="h-10 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />
         ))}
       </div>
     )
@@ -136,12 +141,12 @@ const AttendanceSettings = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 max-w-2xl">
       {/* ── Thresholds ──────────────────────────────────────────── */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-5">Time Thresholds</h3>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-5">Time Thresholds</h3>
         <div className="space-y-5">
           {/* Grace period */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-medium text-gray-600">
+              <label className="text-xs font-medium text-gray-600 dark:text-gray-300">
                 Grace Period (before marked "Late")
               </label>
               <span className="text-sm font-semibold text-blue-600">{gracePeriod} min</span>
@@ -152,9 +157,9 @@ const AttendanceSettings = () => {
               max="60"
               step="5"
               {...register('grace_period_minutes')}
-              className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-600"
+              className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer accent-blue-600"
             />
-            <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+            <div className="flex justify-between text-[10px] text-gray-400 dark:text-gray-500 mt-1">
               <span>0 min</span><span>30 min</span><span>60 min</span>
             </div>
             {errors.grace_period_minutes && (
@@ -165,7 +170,7 @@ const AttendanceSettings = () => {
           {/* Number inputs */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                 Half Day Threshold (hours)
               </label>
               <input type="number" min="1" max="12" step="0.5" {...register('half_day_threshold_hours')} className={inputCls} />
@@ -174,7 +179,7 @@ const AttendanceSettings = () => {
               )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                 Overtime Starts After (hours)
               </label>
               <input type="number" min="4" max="16" step="0.5" {...register('overtime_after_hours')} className={inputCls} />
@@ -183,7 +188,7 @@ const AttendanceSettings = () => {
               )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                 Geo-fence Radius (meters)
               </label>
               <input type="number" min="0" max="10000" step="10" {...register('geofence_radius_meters')} className={inputCls} />
@@ -195,11 +200,11 @@ const AttendanceSettings = () => {
         </div>
       </div>
 
-      <div className="border-t border-gray-100" />
+      <div className="border-t border-gray-100 dark:border-gray-700" />
 
       {/* ── Toggles ──────────────────────────────────────────────── */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-2">Rules & Behaviour</h3>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">Rules & Behaviour</h3>
         <Controller
           control={control}
           name="allow_wfh"
@@ -237,18 +242,46 @@ const AttendanceSettings = () => {
           )}
         />
         {autoAbsent && (
-          <div className="ml-4 pl-4 border-l-2 border-blue-200 py-2 mt-1">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Auto-absent Threshold Time</label>
+          <div className="ml-4 pl-4 border-l-2 border-blue-200 dark:border-blue-800 py-2 mt-1">
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Auto-absent Threshold Time</label>
             <input
               type="time"
               {...register('auto_absent_after_time')}
               className={cn(inputCls, 'w-36')}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
               Employees with no check-in by this time will be auto-marked absent.
             </p>
           </div>
         )}
+      </div>
+
+      <div className="border-t border-gray-100 dark:border-gray-700" />
+
+      {/* ── Reminder Times ────────────────────────────────────────── */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">Reminder Notifications</h3>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+          In-app reminders are sent at these times each day (in company timezone).
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Check-in Reminder Time</label>
+            <input
+              type="time"
+              {...register('checkin_reminder_time')}
+              className={cn(inputCls, 'w-full')}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Check-out Reminder Time</label>
+            <input
+              type="time"
+              {...register('checkout_reminder_time')}
+              className={cn(inputCls, 'w-full')}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-end pt-2 border-t border-gray-100">
@@ -261,17 +294,17 @@ const AttendanceSettings = () => {
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowConfirm(false)} />
-          <div className="relative bg-white rounded-xl shadow-xl p-6 max-w-sm w-full z-10">
+          <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 max-w-sm w-full z-10">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                 <AlertCircle size={20} className="text-amber-600" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Confirm Changes</p>
-                <p className="text-xs text-gray-500">These settings affect all employees.</p>
+                <p className="font-semibold text-gray-900 dark:text-white">Confirm Changes</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">These settings affect all employees.</p>
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-5">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-5">
               Saving attendance settings will immediately affect how attendance is tracked for all employees.
               Are you sure?
             </p>
