@@ -19,6 +19,8 @@ class CompanySettingsOut(BaseModel):
     work_start_time: str
     work_end_time:   str
     admin_ip_whitelist: List[str] = []
+    bgv_required:              bool = False
+    onboarding_stale_days:     int = 7
 
     class Config:
         from_attributes = True
@@ -38,6 +40,8 @@ class CompanySettingsUpdate(BaseModel):
     work_start_time: Optional[str]       = None
     work_end_time:   Optional[str]       = None
     admin_ip_whitelist: Optional[List[str]] = None
+    bgv_required:              Optional[bool] = None
+    onboarding_stale_days:     Optional[int]  = None
 
 
 class AttendanceConfigOut(BaseModel):

@@ -139,6 +139,11 @@ PERMISSIONS = {
 
     # Audit
     "audit:view":          ("audit", "view", "View audit logs"),
+
+    # Onboarding
+    "onboarding:view":     ("onboarding", "view",   "View onboarding data"),
+    "onboarding:manage":   ("onboarding", "manage", "Manage onboarding (BGV, checklists, transitions)"),
+    "employee:approve":    ("staff", "approve",      "Approve pending employee requests"),
 }
 
 
@@ -177,6 +182,8 @@ ROLE_PERMISSIONS = {
         "dashboard:admin",
         # Documents, MFA, Audit
         "document:upload", "document:view", "mfa:manage", "audit:view",
+        # Onboarding
+        "onboarding:view", "onboarding:manage", "employee:approve",
     ],
 
     "hr": [
@@ -204,6 +211,8 @@ ROLE_PERMISSIONS = {
         "dashboard:admin",
         # Documents, MFA
         "document:upload", "document:view", "mfa:manage",
+        # Onboarding
+        "onboarding:view", "onboarding:manage", "employee:approve",
     ],
 
     "manager": [
@@ -227,6 +236,8 @@ ROLE_PERMISSIONS = {
         "dashboard:manager",
         # MFA
         "mfa:manage",
+        # Onboarding — view only (team reports)
+        "onboarding:view",
     ],
 
     "employee": [

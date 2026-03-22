@@ -12,6 +12,13 @@ from app.models.settings import (
     RolePermission, NotificationPreference, Holiday,
 )
 from app.models.permission import Permission, DefaultRolePermission
+from app.models.onboarding import (
+    BackgroundVerification, BGVItem, BGVStatus, BGVItemStatus,
+    OnboardingChecklistTemplate, ChecklistTemplateItem, EmployeeChecklistItem,
+    EmployeeApprovalStep, ApprovalStepStatus,
+    DocumentRequirement, OnboardingStatusTransition,
+    JoiningInstruction, EmployeeJoiningDetail,
+)
 
 __all__ = [
     "User", "Department", "Role",
@@ -27,4 +34,10 @@ __all__ = [
     "RolePermission", "NotificationPreference", "Holiday",
     "UserSession",
     "Permission", "DefaultRolePermission",
+    # Onboarding
+    "BackgroundVerification", "BGVItem", "BGVStatus", "BGVItemStatus",
+    "OnboardingChecklistTemplate", "ChecklistTemplateItem", "EmployeeChecklistItem",
+    "EmployeeApprovalStep", "ApprovalStepStatus",
+    "DocumentRequirement", "OnboardingStatusTransition",
+    "JoiningInstruction", "EmployeeJoiningDetail",
 ]

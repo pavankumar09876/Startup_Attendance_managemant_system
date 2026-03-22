@@ -7,11 +7,15 @@ import AppLayout from '@/components/layout/AppLayout'
 import CommandPalette from '@/components/CommandPalette'
 import KeyboardShortcuts from '@/components/KeyboardShortcuts'
 
+// Landing page
+import LandingPage from '@/pages/landing/LandingPage'
+
 // Auth pages
 import LoginPage from '@/pages/auth/LoginPage'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 import SetPasswordPage from '@/pages/auth/SetPasswordPage'
+import AcceptInvitePage from '@/pages/auth/AcceptInvitePage'
 
 // App pages
 import DashboardPage  from '@/pages/dashboard/DashboardPage'
@@ -25,6 +29,7 @@ import EmployeeDetailPage   from '@/pages/staff/EmployeeDetailPage'
 import PayrollPage    from '@/pages/payroll/PayrollPage'
 import ReportsPage    from '@/pages/reports/ReportsPage'
 import SettingsPage   from '@/pages/settings/SettingsPage'
+import OnboardingPage from '@/pages/onboarding/OnboardingPage'
 
 const App = () => (
   <>
@@ -32,9 +37,11 @@ const App = () => (
   <KeyboardShortcuts />
   <Routes>
     {/* ── Public routes ─────────────────────────────────────── */}
+    <Route path={ROUTES.HOME}            element={<LandingPage />} />
     <Route path={ROUTES.LOGIN}           element={<LoginPage />} />
     <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
     <Route path={ROUTES.RESET_PASSWORD}  element={<ResetPasswordPage />} />
+    <Route path={ROUTES.ACCEPT_INVITE}  element={<AcceptInvitePage />} />
     <Route
       path={ROUTES.SET_PASSWORD}
       element={
@@ -52,7 +59,7 @@ const App = () => (
         </ProtectedRoute>
       }
     >
-      <Route index element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+      {/* Authenticated users hitting a protected base path go to dashboard */}
       <Route path={ROUTES.DASHBOARD}  element={<DashboardPage />} />
       <Route path={ROUTES.ATTENDANCE} element={<AttendancePage />} />
       <Route path={ROUTES.LEAVE}      element={<LeavePage />} />
@@ -79,6 +86,14 @@ const App = () => (
         }
       />
       <Route
+        path={ROUTES.ONBOARDING}
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.HR]}>
+            <OnboardingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path={ROUTES.PAYROLL}
         element={
           <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.HR]}>
@@ -99,7 +114,7 @@ const App = () => (
     </Route>
 
     {/* Catch-all */}
-    <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+    <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
   </Routes>
   </>
 )

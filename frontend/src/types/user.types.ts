@@ -2,6 +2,10 @@ import { ROLES } from '@/constants/roles'
 
 export type EmploymentType = 'full_time' | 'part_time' | 'contract' | 'intern'
 export type WorkLocation   = 'office' | 'remote' | 'hybrid'
+export type EmployeeStatus =
+  | 'offer_sent' | 'offer_accepted' | 'pre_onboarding' | 'joined'
+  | 'invited' | 'active' | 'training' | 'bench'
+  | 'suspended' | 'terminated'
 
 export interface Department {
   id: string
@@ -43,7 +47,13 @@ export interface User {
   ifsc_code?: string
   avatar_url?: string
   is_active: boolean
+  status?: EmployeeStatus
   must_change_password: boolean
+  invite_token_expires_at?: string
+  offer_sent_at?: string
+  offer_accepted_at?: string
+  joined_at?: string
+  onboarding_stage?: string
   created_at: string
 }
 

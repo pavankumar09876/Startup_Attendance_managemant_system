@@ -351,3 +351,49 @@ async def refresh_token_endpoint(
     new_refresh = create_refresh_token({"sub": str(user.id), "role": user.role.value})
     await db.commit()
     return TokenOut(access_token=new_access, refresh_token=new_refresh, user=UserOut.model_validate(user))
+
+
+# ── Accept Invite (public — no auth required) ────────────────────────────────
+
+class AcceptInviteRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+@router.post("/accept-invite")
+@limiter.limit("10/minute")
+async def accept_invite(
+    request: Request,
+    payload: AcceptInviteRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Validate invite token, set password, and return tokens."""
+    # Validate password strength
+    pw = payload.new_password
+    if len(pw) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters")
+    if not re.search(r"[A-Z]", pw):
+        raise HTTPException(400, "Password must contain an uppercase letter")
+    if not re.search(r"[a-z]", pw):
+        raise HTTPException(400, "Password must contain a lowercase letter")
+    if not re.search(r"[0-9]", pw):
+        raise HTTPException(400, "Password must contain a digit")
+
+    from app.services.onboarding_service import accept_invite as svc_accept_invite
+    user = await svc_accept_invite(db, payload.token, pw)
+
+    # Create session + tokens
+    access_token = create_access_token({"sub": str(user.id), "role": user.role.value})
+    refresh_token = create_refresh_token({"sub": str(user.id), "role": user.role.value})
+
+    session = UserSession(
+        user_id=user.id,
+        jti=secrets.token_hex(16),
+        device_info=request.headers.get("User-Agent", "unknown"),
+        ip_address=request.client.host if request.client else "unknown",
+        last_active=datetime.now(timezone.utc),
+    )
+    db.add(session)
+    await db.commit()
+
+    return TokenOut(access_token=access_token, refresh_token=refresh_token, user=UserOut.model_validate(user))

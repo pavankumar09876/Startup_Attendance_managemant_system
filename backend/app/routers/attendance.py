@@ -253,6 +253,74 @@ async def check_in_geo(
 
 # ── Break tracking ─────────────────────────────────────────────────────────────
 
+# ── Bulk attendance marking ──────────────────────────────────────────────────
+
+@router.post("/bulk-mark")
+async def bulk_mark_attendance(
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("attendance:create")),
+):
+    """Bulk create attendance records for multiple employees on a given date.
+    Payload: { employee_ids: [...], date: "YYYY-MM-DD", status: "present"|"absent"|"wfh"|"on_leave" }
+    """
+    from app.utils.audit import log_action
+
+    employee_ids = payload.get("employee_ids", [])
+    target_date = payload.get("date")
+    status_str = payload.get("status", "present")
+
+    if not employee_ids or not target_date:
+        raise HTTPException(400, "employee_ids and date are required")
+
+    from datetime import datetime as dt
+    try:
+        att_date = dt.strptime(target_date, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        raise HTTPException(400, "Invalid date format. Use YYYY-MM-DD")
+
+    try:
+        att_status = AttendanceStatus(status_str)
+    except ValueError:
+        raise HTTPException(400, f"Invalid status: {status_str}")
+
+    created = 0
+    skipped = 0
+    for eid in employee_ids:
+        try:
+            emp_uuid = uuid.UUID(eid)
+        except (ValueError, TypeError):
+            skipped += 1
+            continue
+
+        # Skip if record already exists for this employee+date
+        existing = await db.execute(
+            select(Attendance).where(
+                Attendance.employee_id == emp_uuid,
+                Attendance.date == att_date,
+            )
+        )
+        if existing.scalar_one_or_none():
+            skipped += 1
+            continue
+
+        record = Attendance(
+            employee_id=emp_uuid,
+            date=att_date,
+            status=att_status,
+        )
+        db.add(record)
+        created += 1
+
+    await log_action(
+        db, current_user, "attendance.bulk_marked", "Attendance", None,
+        description=f"Bulk marked {created} attendance records as {status_str} for {target_date}",
+        metadata={"employee_ids": employee_ids, "date": target_date, "status": status_str},
+    )
+    await db.commit()
+    return {"created": created, "skipped": skipped, "total": len(employee_ids)}
+
+
 @router.post("/break-start", response_model=AttendanceOut)
 async def break_start(
     db: AsyncSession = Depends(get_db),

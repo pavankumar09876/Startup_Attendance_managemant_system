@@ -1,8 +1,10 @@
 export const ROUTES = {
+  HOME:             '/',
   LOGIN:            '/login',
   FORGOT_PASSWORD:  '/forgot-password',
   RESET_PASSWORD:   '/reset-password',
   SET_PASSWORD:     '/auth/set-password',
+  ACCEPT_INVITE:    '/auth/accept-invite',
   DASHBOARD: '/dashboard',
   ATTENDANCE: '/attendance',
   LEAVE: '/leave',
@@ -11,6 +13,7 @@ export const ROUTES = {
   TASKS: '/tasks',
   STAFF:        '/staff',
   STAFF_DETAIL: '/staff/:id',
+  ONBOARDING:  '/onboarding',
   PAYROLL: '/payroll',
   REPORTS: '/reports',
   SETTINGS: '/settings',

@@ -19,10 +19,15 @@ depends_on = None
 
 def upgrade() -> None:
     # ── #5 Employee lifecycle fields on users ─────────────────────────────
-    employee_status = sa.Enum("invited", "active", "suspended", "terminated", name="employeestatus")
-    employee_status.create(op.get_bind(), checkfirst=True)
+    op.execute("""
+        DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'employeestatus') THEN
+                CREATE TYPE employeestatus AS ENUM ('invited', 'active', 'suspended', 'terminated');
+            END IF;
+        END $$;
+    """)
 
-    op.add_column("users", sa.Column("status", employee_status, nullable=True, server_default="active"))
+    op.add_column("users", sa.Column("status", sa.String(20), nullable=True, server_default="active"))
     op.add_column("users", sa.Column("termination_date", sa.Date(), nullable=True))
     op.add_column("users", sa.Column("termination_reason", sa.Text(), nullable=True))
     op.add_column("users", sa.Column("suspended_at", sa.DateTime(timezone=True), nullable=True))
@@ -32,14 +37,19 @@ def upgrade() -> None:
     op.add_column("users", sa.Column("approval_limit", sa.Numeric(12, 2), nullable=True))
 
     # ── #10 Maker-checker: pending employee requests ──────────────────────
-    pending_req_status = sa.Enum("pending", "approved", "rejected", name="pendingemployeerequeststatus")
-    pending_req_status.create(op.get_bind(), checkfirst=True)
+    op.execute("""
+        DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'pendingemployeerequeststatus') THEN
+                CREATE TYPE pendingemployeerequeststatus AS ENUM ('pending', 'approved', 'rejected');
+            END IF;
+        END $$;
+    """)
 
     op.create_table(
         "pending_employee_requests",
         sa.Column("id", UUID(as_uuid=True), primary_key=True),
         sa.Column("payload", sa.Text(), nullable=False),
-        sa.Column("status", pending_req_status, server_default="pending"),
+        sa.Column("status", sa.String(20), server_default="pending"),
         sa.Column("requested_by", UUID(as_uuid=True), sa.ForeignKey("users.id"), nullable=False),
         sa.Column("reviewed_by", UUID(as_uuid=True), sa.ForeignKey("users.id"), nullable=True),
         sa.Column("rejection_reason", sa.Text(), nullable=True),
@@ -89,8 +99,13 @@ def upgrade() -> None:
     )
 
     # ── #15 Multi-stage expense approval ──────────────────────────────────
-    expense_approval_stage = sa.Enum("pending", "approved", "rejected", "skipped", name="expenseapprovalstage")
-    expense_approval_stage.create(op.get_bind(), checkfirst=True)
+    op.execute("""
+        DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'expenseapprovalstage') THEN
+                CREATE TYPE expenseapprovalstage AS ENUM ('pending', 'approved', 'rejected', 'skipped');
+            END IF;
+        END $$;
+    """)
 
     op.create_table(
         "expense_approvals",
@@ -98,7 +113,7 @@ def upgrade() -> None:
         sa.Column("expense_id", UUID(as_uuid=True), sa.ForeignKey("expenses.id"), nullable=False, index=True),
         sa.Column("level", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("approver_id", UUID(as_uuid=True), sa.ForeignKey("users.id"), nullable=True),
-        sa.Column("status", expense_approval_stage, server_default="pending"),
+        sa.Column("status", sa.String(20), server_default="pending"),
         sa.Column("comment", sa.Text(), nullable=True),
         sa.Column("acted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),

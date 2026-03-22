@@ -31,6 +31,17 @@
     background: rgba(148, 163, 184, 0.5);
   }
 
+  /* ── Fix browser autofill on dark backgrounds ───── */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #0a0f1e inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
   /* Dark mode scrollbar */
   .dark * {
     scrollbar-color: rgba(100, 116, 139, 0.3) transparent;

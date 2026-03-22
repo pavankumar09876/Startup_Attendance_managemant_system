@@ -105,24 +105,43 @@ const AdminDashboard = ({ data }: Props) => (
         )}
       </div>
 
-      {/* Department headcount */}
+      {/* Department headcount — horizontal bars */}
       <div className="card p-5">
         <SectionTitle title="Department Headcount" subtitle="Employees per department" />
         {data.dept_headcount.length === 0 ? (
           <EmptyState title="No departments" description="Add departments to see data here." />
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={data.dept_headcount} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+          <ResponsiveContainer width="100%" height={Math.max(220, data.dept_headcount.length * 44)}>
+            <BarChart
+              data={data.dept_headcount}
+              layout="vertical"
+              margin={{ top: 4, right: 24, bottom: 0, left: 8 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={false} />
               <XAxis
-                dataKey="department"
+                type="number"
+                allowDecimals={false}
                 tick={{ fontSize: 11, fill: '#9CA3AF' }}
                 tickLine={false}
                 axisLine={false}
               />
-              <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 12 }} />
-              <Bar dataKey="count" fill="#2563EB" radius={[4, 4, 0, 0]} name="Employees" />
+              <YAxis
+                type="category"
+                dataKey="department"
+                width={140}
+                tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip
+                contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 12 }}
+                formatter={(value: number) => [`${value} employees`, 'Count']}
+              />
+              <Bar dataKey="count" name="Employees" radius={[0, 6, 6, 0]} barSize={24}>
+                {data.dept_headcount.map((_, i) => (
+                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         )}

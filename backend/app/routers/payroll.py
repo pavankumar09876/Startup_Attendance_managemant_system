@@ -171,6 +171,43 @@ async def mark_all_paid(
     return {"updated": count}
 
 
+# ── Bulk finalize (process multiple months) ──────────────────────────────────
+@router.post("/bulk-finalize")
+async def bulk_finalize(
+    payload: dict,
+    db:           AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("payroll:finalize")),
+):
+    """Bulk finalize payroll entries by list of entry IDs.
+    Payload: { ids: ["uuid1", "uuid2", ...] }
+    """
+    entry_ids = payload.get("ids", [])
+    if not entry_ids:
+        raise HTTPException(400, "ids list is required")
+
+    updated = 0
+    for eid_str in entry_ids:
+        try:
+            eid = uuid.UUID(eid_str)
+        except (ValueError, TypeError):
+            continue
+        result = await db.execute(select(PayrollEntry).where(PayrollEntry.id == eid))
+        entry = result.scalar_one_or_none()
+        if not entry:
+            continue
+        if entry.status == PayrollStatus.PROCESSED:
+            entry.status = PayrollStatus.FINALIZED
+            updated += 1
+
+    await log_action(
+        db, current_user, "payroll.bulk_finalized", "PayrollEntry", None,
+        description=f"Bulk finalized {updated} payroll entries",
+        metadata={"entry_ids": entry_ids},
+    )
+    await db.commit()
+    return {"finalized": updated, "total": len(entry_ids)}
+
+
 # ── Employee: my payslips ────────────────────────────────────────────────────
 @router.get("/my", response_model=list[PayrollEntryOut])
 async def my_payslips(

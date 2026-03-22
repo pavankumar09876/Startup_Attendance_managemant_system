@@ -221,11 +221,46 @@ async def update_user(
         from app.utils.dependencies import check_permission
         await check_permission(current_user, db, "employee:update")
 
-    # Require re-auth for sensitive field changes
     data = payload.model_dump(exclude_unset=True)
+
+    # Require re-auth only when sensitive fields actually CHANGE value
     SENSITIVE_REAUTH_FIELDS = {"salary", "hra", "allowances", "role"}
-    if any(f in data for f in SENSITIVE_REAUTH_FIELDS):
-        await verify_reauth(current_user, password=confirm_password, mfa_code=confirm_mfa)
+    MONEY_FIELDS = {"salary", "hra", "allowances"}
+    sensitive_changed = False
+    sensitive_in_payload = {f for f in SENSITIVE_REAUTH_FIELDS if f in data}
+    if sensitive_in_payload:
+        from sqlalchemy import select as _sel
+        target = (await db.execute(
+            _sel(User).where(User.id == user_id)
+        )).scalar_one_or_none()
+        if target:
+            for f in sensitive_in_payload:
+                old_val = getattr(target, f, None)
+                new_val = data[f]
+                if f in MONEY_FIELDS:
+                    # Treat None/0/0.0 as equivalent (empty field → 0)
+                    old_num = float(old_val) if old_val else 0.0
+                    new_num = float(new_val) if new_val else 0.0
+                    if old_num != new_num:
+                        sensitive_changed = True
+                        break
+                else:
+                    # Role: compare enum .value on both sides
+                    old_str = old_val.value if hasattr(old_val, 'value') else str(old_val or "")
+                    new_str = new_val.value if hasattr(new_val, 'value') else str(new_val or "")
+                    if old_str != new_str:
+                        sensitive_changed = True
+                        break
+    if sensitive_changed:
+        # Privileged users (super_admin / admin / hr) editing OTHER users
+        # already proved identity via permission check — skip re-auth.
+        # Re-auth only needed for self-edits or non-privileged users.
+        is_privileged_editing_other = (
+            str(user_id) != str(current_user.id)
+            and current_user.role in (Role.SUPER_ADMIN, Role.ADMIN, Role.HR)
+        )
+        if not is_privileged_editing_other:
+            await verify_reauth(current_user, password=confirm_password, mfa_code=confirm_mfa)
 
     try:
         return await svc_update_user(db, user_id, data, current_user)

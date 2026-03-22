@@ -20,7 +20,6 @@ from app.models.leave import Leave, LeaveStatus as _LeaveStatus
 from app.models.settings import LeavePolicy
 from app.services.statutory import calculate_all_statutory
 from app.services.exceptions import ServiceError
-        super().__init__(message)
 
 
 # ── Salary calculation ───────────────────────────────────────────────────────

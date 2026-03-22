@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Enum, DateTime, ForeignKey, Numeric, Text, Date
+from sqlalchemy import Column, String, Boolean, Enum, DateTime, ForeignKey, Numeric, Text, Date, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -17,10 +17,16 @@ class Role(str, enum.Enum):
 
 
 class EmployeeStatus(str, enum.Enum):
-    INVITED    = "invited"      # Account created, hasn't logged in yet
-    ACTIVE     = "active"       # Normal working employee
-    SUSPENDED  = "suspended"    # Temporarily suspended
-    TERMINATED = "terminated"   # No longer with company
+    OFFER_SENT     = "offer_sent"       # Offer letter sent
+    OFFER_ACCEPTED = "offer_accepted"   # Candidate accepted offer
+    PRE_ONBOARDING = "pre_onboarding"   # Documents / BGV in progress
+    JOINED         = "joined"           # Day-1 completed
+    INVITED        = "invited"          # Legacy: account created, hasn't logged in
+    ACTIVE         = "active"           # Normal working employee
+    TRAINING       = "training"         # In training period
+    BENCH          = "bench"            # Waiting for project allocation
+    SUSPENDED      = "suspended"        # Temporarily suspended
+    TERMINATED     = "terminated"       # No longer with company
 
 
 class Department(Base):
@@ -63,7 +69,7 @@ class User(Base):
     work_location = Column(String(20), nullable=True, default="office")
     avatar_url = Column(String(500), nullable=True)
     is_active = Column(Boolean, default=True)
-    status = Column(Enum(EmployeeStatus), default=EmployeeStatus.ACTIVE, nullable=False)
+    status = Column(Enum(EmployeeStatus, values_callable=lambda x: [e.value for e in x]), default=EmployeeStatus.ACTIVE, nullable=False)
     termination_date = Column(Date, nullable=True)
     termination_reason = Column(Text, nullable=True)
     suspended_at = Column(DateTime(timezone=True), nullable=True)
@@ -78,6 +84,14 @@ class User(Base):
     mfa_enabled = Column(Boolean, default=False)
     mfa_backup_codes = Column(Text, nullable=True)  # JSON array of hashed backup codes
     approval_limit = Column(Numeric(12, 2), nullable=True)  # Max expense amount this user can approve
+    # Onboarding / invite fields
+    invite_token = Column(String(255), nullable=True, index=True)
+    invite_token_expires_at = Column(DateTime(timezone=True), nullable=True)
+    invite_accepted_at = Column(DateTime(timezone=True), nullable=True)
+    offer_sent_at = Column(DateTime(timezone=True), nullable=True)
+    offer_accepted_at = Column(DateTime(timezone=True), nullable=True)
+    joined_at = Column(DateTime(timezone=True), nullable=True)
+    onboarding_stage = Column(String(30), nullable=True)
     shift_id = Column(UUID(as_uuid=True), ForeignKey("shifts.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -102,10 +116,14 @@ class PendingEmployeeRequest(Base):
 
     id              = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     payload         = Column(Text, nullable=False)  # JSON of UserCreate data
-    status          = Column(Enum(PendingEmployeeRequestStatus), default=PendingEmployeeRequestStatus.PENDING)
+    status          = Column(Enum(PendingEmployeeRequestStatus, values_callable=lambda x: [e.value for e in x]), default=PendingEmployeeRequestStatus.PENDING)
     requested_by    = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     reviewed_by     = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     rejection_reason = Column(Text, nullable=True)
+    # Multi-step approval chain
+    current_approval_level = Column(Integer, default=0)
+    max_approval_level     = Column(Integer, default=1)
+    approval_chain_config  = Column(Text, nullable=True)  # JSON: [{"level":1,"role":"manager"}, ...]
     created_at      = Column(DateTime(timezone=True), server_default=func.now())
     reviewed_at     = Column(DateTime(timezone=True), nullable=True)
 

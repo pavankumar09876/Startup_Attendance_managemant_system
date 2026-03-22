@@ -23,6 +23,7 @@ from app.routers import settings_router
 from app.routers import sprints as sprints_router
 from app.routers import shifts as shifts_router
 from app.routers import documents as documents_router
+from app.routers import onboarding as onboarding_router
 from app.routers import mfa as mfa_router
 from app.utils.dependencies import get_current_user
 from contextlib import asynccontextmanager
@@ -46,6 +47,9 @@ async def lifespan(app_: FastAPI):
                       id='escalation',   replace_existing=True)
     scheduler.add_job(run_digest,       'cron', hour=8, minute=0,
                       id='daily_digest', replace_existing=True)
+    from app.services.onboarding_cron import run_onboarding_cron
+    scheduler.add_job(run_onboarding_cron, 'cron', hour=9, minute=30,
+                      id='onboarding_cron', replace_existing=True)
     import os as _os
     # Only start scheduler in one worker to avoid duplicate cron runs.
     # IMPORTANT: Default is "false" — you must explicitly set SCHEDULER_WORKER=true
@@ -145,6 +149,7 @@ app.include_router(sprints_router.router,       prefix="/api")
 app.include_router(shifts_router.router,        prefix="/api")
 app.include_router(documents_router.router,     prefix="/api")
 app.include_router(mfa_router.router,           prefix="/api")
+app.include_router(onboarding_router.router,    prefix="/api")
 
 
 _app_start_time = time.time()

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   Plus, Search, LayoutGrid, List, Users, Building2, GitBranch,
-  Mail, Phone, MapPin, Calendar, ChevronRight, UserCheck, UserX, Filter,
+  Mail, Phone, MapPin, Calendar, ChevronRight, UserCheck, UserX, Filter, Shield, HeartPulse,
 } from 'lucide-react'
 
 import { staffService } from '@/services/staff.service'
@@ -24,7 +24,7 @@ import DepartmentsPage from './DepartmentsPage'
 import BulkImportModal from './BulkImportModal'
 import OrgChart from './OrgChart'
 
-type PageTab  = 'employees' | 'managers' | 'departments' | 'org-chart'
+type PageTab  = 'employees' | 'managers' | 'hr' | 'admin' | 'departments' | 'org-chart'
 type ViewMode = 'grid' | 'list'
 
 // ── Stat Card ───────────────────────────────────────────────────────────────────
@@ -221,7 +221,11 @@ const StaffPage = () => {
   const debouncedSearch = useDebounce(search, 300)
 
   // Force role filter based on active tab
-  const tabRole = pageTab === 'employees' ? ROLES.EMPLOYEE : pageTab === 'managers' ? ROLES.MANAGER : ''
+  const tabRole = pageTab === 'employees' ? ROLES.EMPLOYEE
+    : pageTab === 'managers' ? ROLES.MANAGER
+    : pageTab === 'hr' ? ROLES.HR
+    : pageTab === 'admin' ? ROLES.ADMIN
+    : ''
   const effectiveRole = tabRole || roleFilter || undefined
 
   const { data, isLoading } = useQuery({
@@ -234,7 +238,7 @@ const StaffPage = () => {
         is_active:     statusFilter === 'active' ? true : statusFilter === 'inactive' ? false : undefined,
         limit: 100,
       }),
-    enabled: pageTab === 'employees' || pageTab === 'managers',
+    enabled: pageTab === 'employees' || pageTab === 'managers' || pageTab === 'hr' || pageTab === 'admin',
     staleTime: 1000 * 30,
   })
 
@@ -258,8 +262,10 @@ const StaffPage = () => {
   const PAGE_TABS: { id: PageTab; label: string; icon: React.ReactNode }[] = [
     { id: 'employees',   label: 'Employees',   icon: <Users size={14} /> },
     { id: 'managers',    label: 'Managers',     icon: <UserCheck size={14} /> },
-    { id: 'departments', label: 'Departments', icon: <Building2 size={14} /> },
-    { id: 'org-chart',   label: 'Org Chart',   icon: <GitBranch size={14} /> },
+    { id: 'hr',          label: 'HR',           icon: <HeartPulse size={14} /> },
+    { id: 'admin',       label: 'Admins',       icon: <Shield size={14} /> },
+    { id: 'departments', label: 'Departments',  icon: <Building2 size={14} /> },
+    { id: 'org-chart',   label: 'Org Chart',    icon: <GitBranch size={14} /> },
   ]
 
   const selectCls = cn(
@@ -287,20 +293,20 @@ const StaffPage = () => {
             >
               {tab.icon}
               {tab.label}
-              {(tab.id === 'employees' || tab.id === 'managers') && tab.id === pageTab && (
+              {(tab.id === 'employees' || tab.id === 'managers' || tab.id === 'hr' || tab.id === 'admin') && tab.id === pageTab && (
                 <span className="ml-0.5 text-xs text-gray-400 dark:text-gray-500">({total})</span>
               )}
             </button>
           ))}
         </div>
 
-        {(pageTab === 'employees' || pageTab === 'managers') && canManage && (
+        {(pageTab === 'employees' || pageTab === 'managers' || pageTab === 'hr' || pageTab === 'admin') && canManage && (
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" leftIcon={<Plus size={14} />} onClick={() => setImportOpen(true)}>
               Import CSV
             </Button>
             <Button variant="primary" size="sm" leftIcon={<Plus size={14} />} onClick={() => setAddOpen(true)}>
-              Add {pageTab === 'managers' ? 'Manager' : 'Employee'}
+              Add {pageTab === 'managers' ? 'Manager' : pageTab === 'hr' ? 'HR' : pageTab === 'admin' ? 'Admin' : 'Employee'}
             </Button>
           </div>
         )}
@@ -310,7 +316,7 @@ const StaffPage = () => {
         <OrgChart />
       ) : pageTab === 'departments' ? (
         <DepartmentsPage />
-      ) : (pageTab === 'employees' || pageTab === 'managers') ? (
+      ) : (pageTab === 'employees' || pageTab === 'managers' || pageTab === 'hr' || pageTab === 'admin') ? (
         <>
           {/* ── Stat Cards ───────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -454,8 +460,8 @@ const StaffPage = () => {
           ) : employees.length === 0 ? (
             <EmptyState
               icon={<Users size={40} className="text-gray-300" />}
-              title={pageTab === 'managers' ? 'No managers found' : 'No employees found'}
-              description={debouncedSearch ? `No results for "${debouncedSearch}".` : pageTab === 'managers' ? 'Add a manager to get started.' : 'Add your first employee to get started.'}
+              title={pageTab === 'managers' ? 'No managers found' : pageTab === 'hr' ? 'No HR staff found' : pageTab === 'admin' ? 'No admins found' : 'No employees found'}
+              description={debouncedSearch ? `No results for "${debouncedSearch}".` : pageTab === 'managers' ? 'Add a manager to get started.' : pageTab === 'hr' ? 'Add HR staff to get started.' : pageTab === 'admin' ? 'Add an admin to get started.' : 'Add your first employee to get started.'}
               action={canManage ? (
                 <Button variant="primary" size="sm" leftIcon={<Plus size={14} />} onClick={() => setAddOpen(true)}>
                   Add Employee

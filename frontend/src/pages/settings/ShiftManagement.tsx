@@ -236,9 +236,9 @@ const ShiftManagement = () => {
         </div>
       )}
 
-      {(modalShift === 'new' || (modalShift && modalShift !== 'new')) && (
+      {modalShift != null && (
         <ShiftModal
-          shift={modalShift === 'new' ? null : modalShift}
+          shift={modalShift === 'new' ? null : (modalShift as Shift)}
           onClose={() => setModalShift(undefined)}
         />
       )}

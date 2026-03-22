@@ -30,7 +30,7 @@ const BacklogSection = ({ tasks, sprints, canManage, members, projectId, selecte
 
   const { mutate: moveToSprint } = useMutation({
     mutationFn: ({ taskId, sprintId }: { taskId: string; sprintId: string | null }) =>
-      taskService.update(taskId, { sprint_id: sprintId }),
+      taskService.update(taskId, { sprint_id: sprintId ?? undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] })
     },

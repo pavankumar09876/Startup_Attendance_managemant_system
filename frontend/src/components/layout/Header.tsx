@@ -18,6 +18,7 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.PAYROLL]:    'Payroll',
   [ROUTES.REPORTS]:    'Reports',
   [ROUTES.SETTINGS]:   'Settings',
+  [ROUTES.ONBOARDING]: 'Onboarding',
   [ROUTES.PROFILE]:    'My Profile',
 }
 

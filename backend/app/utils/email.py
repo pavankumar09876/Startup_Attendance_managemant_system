@@ -71,6 +71,55 @@ def send_welcome_email(to: str, full_name: str, temp_password: str) -> None:
     _send(to, subject, html)
 
 
+async def send_invite_email(to: str, full_name: str, invite_url: str, expiry_hours: int = 72) -> None:
+    """Send invite link for password setup (no temp password)."""
+    subject = f"Welcome to {settings.APP_NAME} — Set Up Your Account"
+    html = f"""
+    <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:12px">
+      <h2 style="color:#1e40af;margin-bottom:4px">Welcome to {settings.APP_NAME}!</h2>
+      <p style="color:#6b7280;margin-top:0">Hi <strong>{full_name}</strong>, your account has been created.</p>
+
+      <p style="color:#374151">
+        Click the button below to set your password and activate your account.
+        This link expires in <strong>{expiry_hours} hours</strong>.
+      </p>
+
+      <a href="{invite_url}"
+         style="display:inline-block;background:#1d4ed8;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:24px 0">
+        Set Up My Account
+      </a>
+
+      <p style="color:#9ca3af;font-size:12px;margin-top:32px">
+        If you did not expect this email, please contact your HR team.
+      </p>
+    </div>
+    """
+    _send(to, subject, html)
+
+
+async def send_joining_instructions_email(
+    to: str, full_name: str, subject: str, body_html: str, manager_name: str = "TBD"
+) -> None:
+    """Send pre-joining instructions to a new employee."""
+    html = f"""
+    <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:12px">
+      <h2 style="color:#1e40af;margin-bottom:4px">Joining Instructions</h2>
+      <p style="color:#6b7280;margin-top:0">Hi <strong>{full_name}</strong>,</p>
+
+      <p style="color:#374151"><strong>Reporting Manager:</strong> {manager_name}</p>
+
+      <div style="margin:20px 0;padding:16px;background:#f8fafc;border-radius:8px">
+        {body_html}
+      </div>
+
+      <p style="color:#9ca3af;font-size:12px;margin-top:32px">
+        If you have questions, please reach out to your HR team or reporting manager.
+      </p>
+    </div>
+    """
+    _send(to, subject, html)
+
+
 def send_reset_email(to: str, full_name: str, reset_token: str) -> None:
     reset_url = f"http://localhost:5173/auth/reset-password?token={reset_token}"
     subject = f"{settings.APP_NAME} — Password Reset Request"

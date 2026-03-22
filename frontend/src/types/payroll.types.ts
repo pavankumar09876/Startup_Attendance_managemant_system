@@ -4,6 +4,8 @@ export interface PayrollEntry {
   employee_id: string
   employee_name: string
   employee_code: string
+  month: number
+  year: number
   department_name?: string
   designation?: string
   bank_account?: string

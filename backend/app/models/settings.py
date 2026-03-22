@@ -28,6 +28,9 @@ class CompanySettings(Base):
     work_end_time   = Column(String(5), default="18:00")
     # IP whitelist for admin actions (JSON array of CIDR/IP strings, empty = no restriction)
     admin_ip_whitelist = Column(JSON, default=lambda: [])
+    # Onboarding configuration
+    bgv_required              = Column(Boolean, default=False)
+    onboarding_stale_days     = Column(Integer, default=7)     # days before stale reminder
     updated_at      = Column(DateTime(timezone=True), onupdate=func.now())
 
 

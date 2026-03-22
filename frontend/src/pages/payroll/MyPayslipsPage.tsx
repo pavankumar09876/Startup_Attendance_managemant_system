@@ -4,7 +4,7 @@ import { Download, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { payrollService } from '@/services/payroll.service'
-import type { Payslip } from '@/types/user.types'
+import type { PayrollEntry } from '@/types/payroll.types'
 import EmptyState from '@/components/common/EmptyState'
 import PayslipDetailModal from './PayslipDetailModal'
 import { cn } from '@/utils/cn'
@@ -17,7 +17,7 @@ const MONTHS = [
 const fmtINR = (n: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n)
 
-const StatusBadge = ({ status }: { status: Payslip['status'] }) => (
+const StatusBadge = ({ status }: { status: PayrollEntry['status'] }) => (
   <span className={cn(
     'text-xs font-medium px-2 py-0.5 rounded-full',
     status === 'paid'      ? 'bg-green-100 text-green-700' :
@@ -38,7 +38,7 @@ const MyPayslipsPage = () => {
     staleTime: 1000 * 60 * 5,
   })
 
-  const handleDownload = async (ps: Payslip) => {
+  const handleDownload = async (ps: PayrollEntry) => {
     setDownloadingId(ps.id)
     try {
       const blob = await payrollService.downloadPayslip(ps.id)

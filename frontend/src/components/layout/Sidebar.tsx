@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Clock, CalendarOff, FolderKanban,
   CheckSquare, Users, Wallet, BarChart2, Settings,
   ChevronLeft, ChevronRight, LogOut, Briefcase, X,
+  UserPlus,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useAuth } from '@/hooks/useAuth'
@@ -29,6 +30,12 @@ const NAV_ITEMS: NavItem[] = [
     path: ROUTES.STAFF,
     icon: <Users size={18} />,
     roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.HR, ROLES.MANAGER],
+  },
+  {
+    label: 'Onboarding',
+    path: ROUTES.ONBOARDING,
+    icon: <UserPlus size={18} />,
+    roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.HR],
   },
   {
     label: 'Payroll',
